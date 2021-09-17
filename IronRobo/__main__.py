@@ -76,7 +76,7 @@ def get_readable_time(seconds: int) -> str:
 PM_START_TEXT = """
 нєℓℓσ ι αм [Ironman]( https://telegra.ph/file/895bfecd37c2676860eff.jpg)* ѕυρєя gяσυρ мαηαgємєηт вσт. 
  нιт` *📚Commands* `buttoη вєℓσω тσ ƒιη∂ συт тнє ¢σммαη∂ѕ
-.` 
+
 """
 
 buttons = [
@@ -104,8 +104,9 @@ buttons = [
 
 
 HELP_STRINGS = """
-`Hi.. I'm` [Ironman]( https://telegra.ph/file/895bfecd37c2676860eff.jpg)
-`Click on the buttons below to get documentation about specific modules..`"""
+Hi.. I'm [Ironman](https://telegra.ph/file/895bfecd37c2676860eff.jpg)
+Click on the buttons below to get documentation about specific modules..
+"""
 
 
 IRONMAN_IMG = " https://telegra.ph/file/895bfecd37c2676860eff.jpg"
@@ -217,11 +218,12 @@ def start(update: Update, context: CallbackContext):
 
         else:
             update.effective_message.reply_text(
-                PM_START_TEXT,
-                reply_markup=InlineKeyboardMarkup(buttons),
-                parse_mode=ParseMode.MARKDOWN,
-                timeout=60,
-            )
+                PM_START_TEXT, reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN, timeout=60)
+
+            
+                
+                
+                
     else:
         update.effective_message.reply_text(
             "I'm awake already!\n<b>Haven't slept since:</b> <code>{}</code>".format(
