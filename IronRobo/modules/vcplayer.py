@@ -25,4 +25,5 @@ COMMANDS
                 /join - invite assistant to your chat 
                 /admincache - Refresh admin list 
                 /ubleave - remove assistant from your chat
-                """
+                
+"""
