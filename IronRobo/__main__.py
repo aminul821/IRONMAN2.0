@@ -82,7 +82,7 @@ PM_START_TEXT = """
 buttons = [
     [
         InlineKeyboardButton(
-            text="➕️ ADD  Ironman TO YOUR GROUP ➕️", url="t.me/ironman_groupassist_group?startgroup=true"),
+            text="➕️ ADD  Ironman TO YOUR GROUP ➕️", url="t.me/ironman_groupassist_bot?startgroup=true"),
     ],
     [
         InlineKeyboardButton(text="ℹ️ ABOUT", callback_data="ironman_"),
