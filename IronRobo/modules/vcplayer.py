@@ -34,7 +34,7 @@ __help__ = """
 /cache - refresh the admin cache
 /ping - check the bot ping status
 
-"""
+
 /uptime - check the bot uptime status
 /id - show the group/user id & other
 
@@ -55,3 +55,5 @@ __help__ = """
 /ub - to unbanned user you're banned from group
 /m and /tm (mute / temporary mute) - mute permanently or temporarily muted user in group
 /um - to unmute user you're muted in group
+
+"""
