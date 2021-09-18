@@ -9,7 +9,7 @@ import glob
 import time
 from telethon.tl.types import InputMessagesFilterPhotos
 
-import getsize
+
 from PIL import Image, ImageDraw, ImageFont
 from telethon.tl.types import InputMessagesFilterPhotos
 
