@@ -1,9 +1,9 @@
 import html
 import random
-import YoneRobot.modules.truth_and_dare_string as truth_and_dare_string
-from YoneRobot import dispatcher
+import IronRobo.modules.truth_and_dare_string as truth_and_dare_string
+from IroRobo import dispatcher
 from telegram import ParseMode, Update, Bot
-from YoneRobot.modules.disable import DisableAbleCommandHandler
+from IronRobo.modules.disable import DisableAbleCommandHandler
 from telegram.ext import CallbackContext, run_async
 
 @run_async
