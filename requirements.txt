@@ -14,6 +14,7 @@ pynewtonmath
 spongemock
 zalgo-text
 geopy
+
 nltk
 psutil
 aiohttp>=2.2.5
@@ -56,3 +57,4 @@ search_engine_parser
 pytz
 tzlocal~=2.0
 gpytranslate
+Pykeyboard
