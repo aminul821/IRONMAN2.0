@@ -12,6 +12,10 @@ from telethon.tl.types import InputMessagesFilterPhotos
 
 @register(pattern="^/logo ?(.*)")
 async def lego(event):
+ quew = event.pattern_match.group(1)
+ if not quew:
+        await event.reply("Provide Some Text To Draw!")
+        return 
  try:
     memek = await event.reply('Creating your logo...wait!')
     text = event.pattern_match.group(1)
