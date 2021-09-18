@@ -1,7 +1,7 @@
 import os
 from IronRobo.events import register
 from IronRobo import telethn as tbot
-from PIL import Image, ImageDraw, 
+
 
 import glob
 import os
