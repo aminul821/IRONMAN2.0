@@ -1,47 +1,56 @@
-import os
 from IronRobo.events import register
+from IronRobo import OWNER_ID
 from IronRobo import telethn as tbot
-
-
+import os 
+from PIL import Image, ImageDraw, ImageFont
+import shutil 
+import random, re
 import glob
-import os
-import random
+import time
+from telethon.tl.types import InputMessagesFilterPhotos
+
 
 from PIL import Image, ImageDraw, ImageFont
 from telethon.tl.types import InputMessagesFilterPhotos
 
+
 @register(pattern="^/logo ?(.*)")
 async def lego(event):
  quew = event.pattern_match.group(1)
- if not quew:
-        await event.reply("Provide Some Text To Draw!")
-        return 
+ if event.sender_id == OWNER_ID:
+     pass
+ else:
+     
+    if not quew:
+       await event.reply('Provide Some Text To Draw!')
+       return
+    else:
+       pass
+ await event.reply('Creating your logo...wait!')
  try:
-    memek = await event.reply('Creating your logo...wait!')
     text = event.pattern_match.group(1)
-    img = Image.open("resources/blackbg.jpg")
+    img = Image.open('resources/blackbg.jpg')
     draw = ImageDraw.Draw(img)
     image_widthz, image_heightz = img.size
     pointsize = 500
     fillcolor = "gold"
     shadowcolor = "blue"
-    font = random.choice("resources/fonts")
+    font =random.choice("resources/fonts")
     w, h = draw.textsize(text, font=font)
     h += int(h*0.21)
     image_width, image_height = img.size
     draw.text(((image_widthz-w)/2, (image_heightz-h)/2), text, font=font, fill=(255, 255, 255))
     x = (image_widthz-w)/2
     y= ((image_heightz-h)/2+6)
-    draw.text((x, y), text, font=font, fill="black", stroke_width=4, stroke_fill="yellow")
-    fname2 = "LogoByironman.png"
+    draw.text((x, y), text, font=font, fill="black", stroke_width=25, stroke_fill="yellow")
+    fname2 = "LogoByInnexia.png"
     img.save(fname2, "png")
-    await memek.edit("`Uploading`")
-    await tbot.send_file(event.chat_id, fname2, caption="Made by IronmanRobot")
+    await tbot.send_file(event.chat_id, fname2, caption="💕 Made By ironman")
     if os.path.exists(fname2):
             os.remove(fname2)
-            await memek.delete()
  except Exception as e:
-   await event.reply(f'Error Report @ironman_Support1, {e}')
+   await event.reply(f'Error Report @ironman_support1, {e}')
+
 
 
 file_help = os.path.basename(__file__)
