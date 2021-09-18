@@ -30,7 +30,7 @@ async def lego(event):
  try:
     text = event.pattern_match.group(1)
     img = Image.open('resources/blackbg.jpg')
-     size = os.path.getsize(path)
+     
     draw = ImageDraw.Draw(img)
     image_widthz, image_heightz = img.size
     pointsize = 500
