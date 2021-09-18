@@ -4,8 +4,7 @@ import codecs
 from datetime import datetime
 from random import shuffle
 from random import randint
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
-import wbb
+from PIL import Image, ImageDraw, ImageFilter, ImageFo
 from pykeyboard import InlineKeyboard
 from pyrogram import filters
 from pyrogram.errors.exceptions.bad_request_400 import (ChatAdminRequired,
@@ -15,7 +14,7 @@ from pyrogram.types import (ChatPermissions, InlineKeyboardButton,
 
 from IronRobo import pbot as app
 from IronRobo.pyrogramee.errors import capture_err
-from wbb.utils.dbfunctions import (captcha_off, captcha_on, del_welcome,
+ import (captcha_off, captcha_on, del_welcome,
                                    get_captcha_cache, get_welcome,
                                    is_captcha_on, is_gbanned_user, set_welcome,
                                    update_captcha_cache)
