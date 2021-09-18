@@ -12,10 +12,12 @@ from telethon.tl.types import InputMessagesFilterPhotos
 
 @register(pattern="^/logo ?(.*)")
 async def lego(event):
-  xx = await eor(event, get_string("com_1"))
-    name = event.pattern_match.group(1)
-    if not name:
-        await eod(xx, "`Give a name too!`")
+ async def lego(event):
+ quew = event.pattern_match.group(1)
+ if not quew:
+        await event.reply("Provide Some Text To Draw!")
+        return 
+      
     bg_, font_ = "", ""
     if event.reply_to_msg_id:
         temp = await event.get_reply_message()
