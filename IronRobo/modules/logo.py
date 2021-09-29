@@ -8,7 +8,7 @@ import random
 import requests
 from pyrogram import filters
 from IronRobo import pbot
-from IronRobo.function.pluginhelpers import get_text, admins_only
+from IronRobo.pyrogramee.pluginhelpers import get_text, admins_only
 
 def download_images(images): 
     count = 0
