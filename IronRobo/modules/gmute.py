@@ -225,11 +225,7 @@ def check_and_mute(bot, update, user_id, should_message=True):
 @run_async
 def enforce_gmute(bot: Bot, update: Update):
     # Not using @restrict handler to avoid spamming - just ignore if cant gmute.
-    if sql.does_chat_gmute(update.effective_chat.id) and update.effective_chat.get_member.can_restrict_members:
-        user = update.effective_user  # type: Optional[User]
-        chat = update.effective_chat  # type: Optional[Chat]
-        msg = update.effective_message  # type: Optional[Message]
-
+    
         if user and not is_user_admin(chat, user.id):
             check_and_mute(bot, update, user.id, should_message=True)
         if msg.new_chat_members:
