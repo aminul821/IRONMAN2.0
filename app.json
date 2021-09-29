@@ -27,7 +27,12 @@
          "description": "Get API_ID from my.telegram.org, used for telethon based modules.",
          "required": true,
          "value": ""
-      },
+       },
+      "STRICT_GBAN": {
+      "description": "Enforce gbans across new groups as well as old groups. When a gbanned user talks, he will be banned.",
+      "value": "True"
+    
+       },
       "API_HASH": {
          "description": "Get API_HASH from my.telegram.org, used for telethon based modules.",
          "required": true,
