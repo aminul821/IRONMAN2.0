@@ -5,7 +5,7 @@ from typing import List, Optional
 from telegram.error import BadRequest, TelegramError
 from telegram.ext import run_async, CommandHandler, MessageHandler, Filters
 from telegram.utils.helpers import mention_html
-from IronRobo import dispatcher, OWNER_ID, DEV_USERSS, DRAGONS, STRICT_GBAN
+from IronRobo import dispatcher, OWNER_ID, DEV_USERS, DRAGONS, STRICT_GBAN
 from IronRobo.modules.helper_funcs.chat_status import user_admin, is_user_admin
 from IronRobo.modules.helper_funcs.extraction import extract_user, extract_user_and_text
 from IronRobo.modules.helper_funcs.filters import CustomFilters
@@ -46,7 +46,7 @@ def gkick(bot: Bot, update: Update, args: List[str]):
     if not user_id:
         message.reply_text("You do not seems to be referring to a user")
         return
-    if int(user_id) in DEV_USERSS or int(user_id) in DRAGONS:
+    if int(user_id) in DEV_USERS or int(user_id) in DRAGONS:
         message.reply_text("OHHH! Someone's trying to gkick a sudo/support user! *Grabs popcorn*")
         return
     if int(user_id) == OWNER_ID:
