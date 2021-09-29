@@ -1,4 +1,3 @@
-
 ﻿from IronRobo import pbot as app
 from IronRobo.utils.errors import capture_err
 from IronRobo.utils.dbfunc import (
