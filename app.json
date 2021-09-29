@@ -33,6 +33,11 @@
          "required": true,
          "value": ""
       },    
+          "BOT_ID": {
+         "description": "Your bot ID.. Use any other bot to get it.",
+         "required": true,
+         "value": ""
+      },
       "SQLALCHEMY_DATABASE_URI": {
          "description": "Your postgres sql db, empty this field if you dont have one.",
          "required": false,
