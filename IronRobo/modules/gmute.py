@@ -226,8 +226,7 @@ def check_and_mute(bot, update, user_id, should_message=True):
 def enforce_gmute(bot: Bot, update: Update):
     # Not using @restrict handler to avoid spamming - just ignore if cant gmute.
     
-        if user and not is_user_admin(chat, user.id):
-            check_and_mute(bot, update, user.id, should_message=True)
+        
         if msg.new_chat_members:
             new_members = update.effective_message.new_chat_members
             for mem in new_members:
