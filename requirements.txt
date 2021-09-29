@@ -61,3 +61,4 @@ Pykeyboard
 yt_dlp
 youtube_search
 youtube_search_python==1.4.6
+envparse
