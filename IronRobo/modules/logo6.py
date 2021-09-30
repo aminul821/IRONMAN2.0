@@ -11,10 +11,10 @@ from IronRobo import telethn
 @telethn.on(events.NewMessage(pattern=f"^[!/]logo ?(.*)"))
 
 async def logo(event):
-    xx = await eor(event, get_string("com_1"))
+    await eor(event, get_string("com_1"))
     name = event.pattern_match.group(1)
     if not name:
-        await eor(xx, "`Give a name too!`", time=5)
+        await eor( "`Give a name too!`", time=5)
     bg_, font_ = None, None
     if event.reply_to_msg_id:
         temp = await event.get_reply_message()
