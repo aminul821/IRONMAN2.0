@@ -5,12 +5,12 @@ import random
 
 from PIL import Image, ImageDraw, ImageFont
 from telethon.tl.types import InputMessagesFilterPhotos
+from IronRobo import telethn
 
 
+@telethn.on(events.NewMessage(pattern=f"^[!/]logo ?(.*)"))
 
-
-
-async def logo_gen(event):
+async def logo(event):
     xx = await eor(event, get_string("com_1"))
     name = event.pattern_match.group(1)
     if not name:
