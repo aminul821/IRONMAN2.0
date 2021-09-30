@@ -33,11 +33,11 @@ async def logo(event):
             res = "https://unsplash.com" + random.choice(res)["href"]
             bst = bs(requests.get(res).content, "html.parser", from_encoding="utf-8")
             ft = bst.find_all("img", "oCCRx")[0]["src"]
-            bg_ = await download_file(ft, "resources/downloads/logo.png")
+            bg_ = await download_file(ft, "resources/blackbg.jpg")
         else:
             pics = []
             async for i in event.client.iter_messages(
-                "@UltroidLogos", filter=InputMessagesFilterPhotos
+                "@amantestlogo", filter=InputMessagesFilterPhotos
             ):
                 pics.append(i)
             id_ = random.choice(pics)
