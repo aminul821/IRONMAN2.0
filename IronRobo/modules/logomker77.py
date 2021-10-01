@@ -31,12 +31,12 @@ async def lego(event):
     image_widthz, image_heightz = img.size
     ambilfont = glob.glob("./resources/fonts/*")
     rfont = random.choice(ambilfont)
-    font = ImageFont.truetype(rfont, 30)
+    font = ImageFont.truetype(rfont, 60)
     w, h = draw.textsize(text, font=font)
     h += int(h*0.21)
     image_width, image_height = img.size
-    draw.text(((image_widthz-w)/1, (image_heightz-h)/1), text, font=font, fill=(300, 300, 300))
-    x = (image_widthz-w)/1
+    draw.text(((image_widthz-w)/2, (image_heightz-h)/2), text, font=font, fill=(300, 300, 300))
+    x = (image_widthz-w)/2
     y = ((image_heightz-h)/2+6)
     draw.text((x, y), text, font=font, fill="white", stroke_width=6, stroke_fill="black")
     fname2 = "LogoByIronman.png"
