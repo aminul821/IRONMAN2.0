@@ -24,12 +24,12 @@ async def lego(event):
  xnxx = await event.reply("Preparing Logo")
  try:
     text = event.pattern_match.group(1)
-    ambilpoto = glob.glob("resources/extras")
+    ambilpoto = glob.glob("./resources/extras/*")
     peler = random.choice(ambilpoto)
     img = Image.open(peler)
     draw = ImageDraw.Draw(img)
     image_widthz, image_heightz = img.size
-    ambilfont = glob.glob("resouces/fonts")
+    ambilfont = glob.glob("./resouces/fonts/*")
     rfont = random.choice(ambilfont)
     font = ImageFont.truetype(rfont, 30)
     w, h = draw.textsize(text, font=font)
