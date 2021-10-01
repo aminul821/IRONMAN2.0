@@ -31,7 +31,7 @@ async def lego(event):
     image_widthz, image_heightz = img.size
     ambilfont = glob.glob("./resources/fonts/*")
     rfont = random.choice(ambilfont)
-    font = ImageFont.truetype(rfont, 200)
+    font = ImageFont.truetype(rfont, 150)
     w, h = draw.textsize(text, font=font)
     h += int(h*0.95)
     image_width, image_height = img.size
@@ -39,7 +39,7 @@ async def lego(event):
     x = (image_widthz-w)/2
     y = ((image_heightz-h)/2+6)
      
-    draw.text((x, y), text, font=font, fill="white", stroke_width=9, stroke_fill="black")
+    draw.text((x, y), text, font=font, fill="white", stroke_width=19, stroke_fill="black")
     fname2 = "LogoByIronman.png"
     img.save(fname2, "png")
     await xnxx.edit("Uploading")
