@@ -1,4 +1,4 @@
-from IronRobo import CMD_HELP
+
 from IronRobo.events import register
 from IronRobo import tbot, OWNER_ID
 import os
