@@ -2,7 +2,7 @@
 from IronRobo.events import register
 from IronRobo import OWNER_ID
 import os
-import dircache
+import random
 from PIL import Image, ImageDraw, ImageFont
 
 @register(pattern="^/logo ?(.*)")
@@ -30,10 +30,8 @@ async def lego(event):
     pointsize = 500
     fillcolor = "gold"
     shadowcolor = "blue"
-     dir = 'resources/fonts'
-      font= random.choice(dircache.listdir(dir))
-     path = os.path.join(dir, filename)
-    font = random.choice("")
+     
+    font = random.choice("resources/fonts")
     w, h = draw.textsize(text, font=font)
     h += int(h*0.21)
     image_width, image_height = img.size
