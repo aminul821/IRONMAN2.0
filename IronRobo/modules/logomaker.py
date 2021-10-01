@@ -31,7 +31,7 @@ async def lego(event):
     image_widthz, image_heightz = img.size
     ambilfont = glob.glob("./resources/fonts/*")
     rfont = random.choice(ambilfont)
-    font = ImageFont.truetype(rfont, 1000)
+    font = ImageFont.truetype(rfont, 200)
     w, h = draw.textsize(text, font=font)
     h += int(h*0.95)
     image_width, image_height = img.size
