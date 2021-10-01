@@ -24,14 +24,14 @@ async def lego(event):
  await event.reply('Drawing Text On Pic.Weit!')
  try:
     text = event.pattern_match.group(1)
-    img = Image.open('resources/blackbg.jpg')
+    img = Image.open('./resources/blackbg.jpg')
     draw = ImageDraw.Draw(img)
     image_widthz, image_heightz = img.size
     pointsize = 500
     fillcolor = "gold"
     shadowcolor = "blue"
      
-    font = ImageFont.truetype(random.choice("resources/fonts"))
+    font = ImageFont.truetype(random.choice("./resources/fonts"))
     w, h = draw.textsize(text, font=font)
     h += int(h*0.21)
     image_width, image_height = img.size
