@@ -36,7 +36,7 @@ async def lego(event):
     h += int(h*0.95)
     image_width, image_height = img.size
     draw.text(((image_widthz-w)/2, (image_heightz-h)/2), text, font=font, fill=(300, 300, 300))
-    x = (image_widthz-w)/2
+    x = (image_widthz-w)/2.5
     y = ((image_heightz-h)/2+6)
      
     draw.text((x, y), text, font=font, fill="white", stroke_width=19, stroke_fill="black")
