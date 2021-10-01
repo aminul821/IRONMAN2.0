@@ -29,7 +29,7 @@ async def lego(event):
     pointsize = 500
     fillcolor = "gold"
     shadowcolor = "blue"
-    font = (random.choice("resources/fonts"))
+    font = ImageFont.truetype(random.choice("resources/fonts"))
     w, h = draw.textsize(text, font=font)
     h += int(h*0.21)
     image_width, image_height = img.size
