@@ -33,10 +33,10 @@ async def lego(event):
     rfont = random.choice(ambilfont)
     font = ImageFont.truetype(rfont, 150)
     w, h = draw.textsize(text, font=font)
-    h += int(h*0.95)
+    h += int(h*0.21)
     image_width, image_height = img.size
-    draw.text(((image_widthz-w)/2, (image_heightz-h)/2), text, font=font, fill=(300, 300, 300))
-    x = (image_widthz-w)/2.5
+    draw.text(((image_widthz-w)/2.5, (image_heightz-h)/2.5), text, font=font, fill=(300, 300, 300))
+    x = (image_widthz-w)/2
     y = ((image_heightz-h)/2+6)
      
     draw.text((x, y), text, font=font, fill="white", stroke_width=19, stroke_fill="black")
