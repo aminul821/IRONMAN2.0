@@ -38,7 +38,8 @@ async def lego(event):
     draw.text(((image_widthz-w)/2, (image_heightz-h)/2), text, font=font, fill=(300, 300, 300))
     x = (image_widthz-w)/2
     y = ((image_heightz-h)/2+6)
-    draw.text((x, y), text, font=font, fill="white", stroke_width=6, stroke_fill="black")
+     mylist = ["red", "blue", "green"]
+    draw.text((x, y), text, font=font, fill="(random.choice(mylist))", stroke_width=6, stroke_fill="black")
     fname2 = "LogoByIronman.png"
     img.save(fname2, "png")
     await xnxx.edit("Uploading")
