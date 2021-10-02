@@ -4,7 +4,7 @@
 from pyrogram import filters
 
 from IronRobo.pyrogramee.pluginhelpers import admins_only, get_text
-from IronRobo.pyrogramee.pyrogram import pbot
+from IronRobo import pbot
 
 
 @pbot.on_message(filters.command("tagall") & ~filters.edited & ~filters.bot)
