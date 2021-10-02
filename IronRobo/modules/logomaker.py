@@ -54,3 +54,10 @@ async def lego(event):
 file_help = os.path.basename(__file__)
 file_help = file_help.replace(".py", "")
 file_helpo = file_help.replace("_", "")
+
+
+_mod_name_ = "Logo"
+_help_ = """
+- /logo name: Create beautiful logo with your name
+- /rlogo : create unique logo
+"""
