@@ -14,7 +14,8 @@ pynewtonmath
 spongemock
 zalgo-text
 geopy
-arq
+
+
 nltk
 psutil
 aiohttp>=2.2.5
