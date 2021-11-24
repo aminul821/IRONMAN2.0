@@ -14,7 +14,7 @@ pynewtonmath
 spongemock
 zalgo-text
 geopy
-
+tqdm
 
 nltk
 psutil
