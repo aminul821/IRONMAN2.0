@@ -65,4 +65,4 @@ youtube_search_python==1.4.6
 envparse
 better_profanity
 nudepy
-
+requests==2.20.0
