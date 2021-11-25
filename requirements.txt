@@ -15,7 +15,7 @@ spongemock
 zalgo-text
 geopy
 tqdm~=4.61
-
+telethon==1.22.0
 nltk
 psutil
 aiohttp>=2.2.5
