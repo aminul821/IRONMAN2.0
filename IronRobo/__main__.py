@@ -75,7 +75,7 @@ def get_readable_time(seconds: int) -> str:
 
 
 PM_START_TEXT = """
-нєℓℓσ ι αм [Ironman](https://telegra.ph/file/895bfecd37c2676860eff.jpg) ѕυρєя gяσυρ мαηαgємєηт вσт. 
+нєℓℓσ ι αм [𝕀𝕣𝕠𝕟𝕞𝕒𝕟](https://telegra.ph/file/077632a6e2d783089aa97.jpg) ѕυρєя gяσυρ мαηαgємєηт вσт. 
  нιт` *📚Commands* `buttoη вєℓσω тσ ƒιη∂ συт тнє ¢σммαη∂ѕ
 
 """
@@ -98,19 +98,19 @@ buttons = [
         InlineKeyboardButton(
             text="💾 SOURCE", url="t.me/theprofessor_isback"),
         InlineKeyboardButton(
-            text="👥 SUPPORT", url="https://t.me/ironman_support1"
+            text="👥 SUPPORT", url="https://t.me/THN_BOTS_SUPPORT"
         ),
     ],
 ]
 
 
 HELP_STRINGS = """
-Hi.. I'm [Ironman](https://telegra.ph/file/895bfecd37c2676860eff.jpg)
+Hi.. I'm [𝕀𝕣𝕠𝕟𝕞𝕒𝕟](https://telegra.ph/file/077632a6e2d783089aa97.jpg)
 Click on the buttons below to get documentation about specific modules..
 """
 
 
-IRONMAN_IMG = " https://telegra.ph/file/895bfecd37c2676860eff.jpg"
+IRONMAN_IMG = "https://telegra.ph/file/077632a6e2d783089aa97.jpg"
 
 DONATE_STRING = """Heya, glad to hear you want to donate!
  You can support the project via [Telegram](t.me/theprofessor_isback) or by contacting @ironmandevs \
@@ -370,7 +370,7 @@ def ironman_about_callback(update, context):
                  \n❍ I check for admins' permissions before executing any command and more stuffs
                  \n\n_ironman's licensed under the GNU General Public License v3.0_
                  \nHere is the [💾Repository](t.me/theprofessor_isback).
-                 \n\nIf you have any question about IRONMAN, let us know at @ironman\_SUPPORT1""",
+                 \n\nIf you have any question about IRONMAN, let us know at @THN\_BOTS\_SUPPORT""",
             parse_mode=ParseMode.MARKDOWN,
             disable_web_page_preview=True,
             reply_markup=InlineKeyboardMarkup(
@@ -692,7 +692,7 @@ def main():
 
     if SUPPORT_CHAT is not None and isinstance(SUPPORT_CHAT, str):
         try:
-            dispatcher.bot.sendMessage(f"@{SUPPORT_CHAT}", "Yes I'm alive 😹")
+            dispatcher.bot.sendMessage(f"@{SUPPORT_CHAT}", "╚╩✠•𝐉𝐢𝐧𝐝𝐚 𝐇𝐮 𝐒𝐚𝐚𝐫🚀•✠ ╩╝")
         except Unauthorized:
             LOGGER.warning(
                 "Bot isnt able to send message to support_chat, go and check!"
