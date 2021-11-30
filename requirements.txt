@@ -4,7 +4,6 @@ gtts
 lxml
 wget
 beautifulsoup4
-pip-tools <https://github.com/jazzband/pip-tools/>
 python-telegram-bot==12.8
 
 
