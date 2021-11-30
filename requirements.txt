@@ -66,8 +66,8 @@ youtube_search_python==1.4.6
 envparse
 better_profanity
 nudepy
-requests==2.18.4
-tea
-cup >= 3.13"
+requests==2.20.0
+
+
 
 vero==2.0.0
