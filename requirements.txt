@@ -6,7 +6,7 @@ wget
 beautifulsoup4
 pip-tools <https://github.com/jazzband/pip-tools/>
 python-telegram-bot==12.8
-
+pip-compile --output-file requirements.txt requirements.in
 sqlalchemy==1.3.20
 psycopg2-binary
 feedparser
@@ -70,4 +70,4 @@ requests==2.18.4
 tea
 cup >= 3.13"
 
-pip-compile requirements.in
+vero==2.0.0
