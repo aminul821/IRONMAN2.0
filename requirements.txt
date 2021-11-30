@@ -69,5 +69,3 @@ nudepy
 requests==2.20.0
 
 
-
-vero==2.0.0
