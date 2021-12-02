@@ -1,5 +1,4 @@
 future
-sql
 emoji
 lxml
 wget
@@ -41,7 +40,6 @@ git+https://github.com/starry69/python-markdown2.git
 wikipedia
 telethon==1.22.0
 telegraph
-telethon
 heroku3
 spamwatch
 alphabet_detector
@@ -81,12 +79,3 @@ nudepy
 motor
 cloudscraper
 gpytranslate
-gtts
-tzlocal~=2.0
-gpytranslate
-Pykeyboard
-yt_dlp
-youtube_search
-youtube_search_python==1.4.6
-lyricsgenius
-tswift
