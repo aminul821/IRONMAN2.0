@@ -43,12 +43,12 @@ async def lego(event):
     fname2 = "LogoByIronman.png"
     img.save(fname2, "png")
     await xnxx.edit("Uploading")
-    await tbot.send_file(event.chat_id, fname2, caption="Made By Ironman")
+    await tbot.send_file(event.chat_id, fname2, caption="╠𝑴𝒂𝒅𝒆 𝑩𝒚╣╠[𝐈𝐫𝐨𝐧𝐌𝐚𝐧🔥](https://t.me/Ironman_groupassit_bot)╣")
     if os.path.exists(fname2):
             os.remove(fname2)
             await xnxx.delete()
  except Exception as e:
-   await event.reply(f"Error Report @Ironman_Support1, {e}")
+   await event.reply(f"Error Report @THN_BOTS_SUPPORT, {e}")
 
 
 file_help = os.path.basename(__file__)
