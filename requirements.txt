@@ -40,6 +40,7 @@ git+https://github.com/starry69/python-markdown2.git
 wikipedia
 telethon==1.22.0
 telegraph
+telethon
 heroku3
 spamwatch
 alphabet_detector
