@@ -110,7 +110,7 @@ Click on the buttons below to get documentation about specific modules..
 """
 
 
-IRONMAN_IMG = "https://telegra.ph/file/077632a6e2d783089aa97.jpg"
+IRONMAN_IMG = "https://telegra.ph/file/384bd0f449a79b6d504c4.mp4"
 
 DONATE_STRING = """Heya, glad to hear you want to donate!
  You can support the project via [Telegram](t.me/theprofessor_isback) or by contacting @ironmandevs \
@@ -226,7 +226,7 @@ def start(update: Update, context: CallbackContext):
                 
     else:
         update.effective_message.reply_text(
-            "I'm awake already!\n<b>Haven't slept since:</b> <code>{}</code>".format(
+            "I'm awake already Master🚀!\n<b>Haven't slept since🙄:</b> <code>{}</code>".format(
                 uptime
             ),
             parse_mode=ParseMode.HTML,
