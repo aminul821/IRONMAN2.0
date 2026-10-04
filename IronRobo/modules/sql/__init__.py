@@ -1,7 +1,27 @@
-from IronRobo import DB_URI
-from sqlalchemy import create_engine
+from IronRobo import DB_URI, LOGGER
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
+
+
+def _upgrade_id_columns(engine):
+    """Widen Telegram user id columns from INTEGER to BIGINT.
+
+    Newer Telegram accounts have ids above 2^31, which don't fit in the
+    INTEGER columns older versions of this bot created.
+    """
+    query = text(
+        "SELECT table_name, column_name FROM information_schema.columns "
+        "WHERE table_schema = current_schema() AND data_type = 'integer' "
+        "AND (column_name = 'user_id' "
+        "OR (table_name = 'chat_members' AND column_name = 'user'))"
+    )
+    with engine.begin() as conn:
+        for table, column in conn.execute(query).fetchall():
+            LOGGER.info("Upgrading %s.%s to BIGINT", table, column)
+            conn.execute(
+                text(f'ALTER TABLE "{table}" ALTER COLUMN "{column}" TYPE BIGINT')
+            )
 
 
 def start() -> scoped_session:
@@ -9,6 +29,8 @@ def start() -> scoped_session:
     if DB_URI.startswith("postgresql"):
         engine_kwargs["client_encoding"] = "utf8"
     engine = create_engine(DB_URI, **engine_kwargs)
+    if DB_URI.startswith("postgresql"):
+        _upgrade_id_columns(engine)
     BASE.metadata.bind = engine
     BASE.metadata.create_all(engine)
     return scoped_session(sessionmaker(bind=engine, autoflush=False))
