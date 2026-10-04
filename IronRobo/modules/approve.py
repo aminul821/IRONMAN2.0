@@ -8,6 +8,7 @@ from telegram.utils.helpers import mention_html
 import IronRobo.modules.sql.approve_sql as sql
 from IronRobo import DRAGONS, dispatcher
 from IronRobo.modules.disable import DisableAbleCommandHandler
+from IronRobo.modules.helper_funcs.ironman_strings import pick
 from IronRobo.modules.helper_funcs.chat_status import user_admin
 from IronRobo.modules.helper_funcs.extraction import extract_user
 from IronRobo.modules.log_channel import loggable
@@ -45,8 +46,8 @@ def approve(update, context):
         return ""
     sql.approve(message.chat_id, user_id)
     message.reply_text(
-        f"[{member.user['first_name']}](tg://user?id={member.user['id']}) has been approved in {chat_title}! They will now be ignored by automated admin actions like locks, blocklists, and antiflood.Enjoy the power",
-        parse_mode=ParseMode.MARKDOWN,
+        pick("approve", user=mention_html(member.user.id, html.escape(member.user.first_name))),
+        parse_mode=ParseMode.HTML,
     )
     log_message = (
         f"<b>{html.escape(chat.title)}:</b>\n"
@@ -85,7 +86,8 @@ def disapprove(update, context):
         return ""
     sql.disapprove(message.chat_id, user_id)
     message.reply_text(
-        f"{member.user['first_name']} is no longer approved in {chat_title}."
+        pick("unapprove", user=mention_html(member.user.id, html.escape(member.user.first_name))),
+        parse_mode=ParseMode.HTML,
     )
     log_message = (
         f"<b>{html.escape(chat.title)}:</b>\n"

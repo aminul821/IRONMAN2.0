@@ -19,6 +19,11 @@ from IronRobo import (
     dispatcher,
     JOIN_LOGGER
 )
+from IronRobo.modules.helper_funcs.ironman_strings import (
+    GOODBYE_LINES,
+    WELCOME_LINES,
+    pick,
+)
 from IronRobo.modules.helper_funcs.media import safe_sender
 from IronRobo.modules.helper_funcs.chat_status import (
     is_user_ban_protected,
@@ -290,7 +295,7 @@ def new_member(update: Update, context: CallbackContext):
                     with suppress(TelegramError):
                         bot.send_message(JOIN_LOGGER, text, parse_mode=ParseMode.HTML)
                 update.effective_message.reply_text(
-                    "Watashi ga kita!", reply_to_message_id=reply
+                    pick("bot_joined"), reply_to_message_id=reply
                 )
                 continue
 
@@ -305,46 +310,39 @@ def new_member(update: Update, context: CallbackContext):
                     new_mem.first_name or "PersonWithNoName"
                 )  # edge case of empty name - occurs for some bugs.
 
-                if cust_welcome:
-                    if cust_welcome == sql.DEFAULT_WELCOME:
-                        cust_welcome = random.choice(
-                            sql.DEFAULT_WELCOME_MESSAGES
-                        ).format(first=escape_markdown(first_name))
-
-                    if new_mem.last_name:
-                        fullname = escape_markdown(f"{first_name} {new_mem.last_name}")
-                    else:
-                        fullname = escape_markdown(first_name)
-                    count = chat.get_member_count()
-                    mention = mention_markdown(new_mem.id, escape_markdown(first_name))
-                    if new_mem.username:
-                        username = "@" + escape_markdown(new_mem.username)
-                    else:
-                        username = mention
-
-                    valid_format = escape_invalid_curly_brackets(
-                        cust_welcome, VALID_WELCOME_FORMATTERS
-                    )
-                    res = valid_format.format(
-                        first=escape_markdown(first_name),
-                        last=escape_markdown(new_mem.last_name or first_name),
-                        fullname=escape_markdown(fullname),
-                        username=username,
-                        mention=mention,
-                        count=count,
-                        chatname=escape_markdown(chat.title),
-                        id=new_mem.id,
-                    )
-
+                if new_mem.last_name:
+                    fullname = escape_markdown(f"{first_name} {new_mem.last_name}")
                 else:
-                    res = random.choice(sql.DEFAULT_WELCOME_MESSAGES).format(
-                        first=escape_markdown(first_name)
-                    )
-                    keyb = []
-
-                backup_message = random.choice(sql.DEFAULT_WELCOME_MESSAGES).format(
-                    first=escape_markdown(first_name)
+                    fullname = escape_markdown(first_name)
+                count = chat.get_member_count()
+                mention = mention_markdown(new_mem.id, escape_markdown(first_name))
+                if new_mem.username:
+                    username = "@" + escape_markdown(new_mem.username)
+                else:
+                    username = mention
+                welcome_values = dict(
+                    first=escape_markdown(first_name),
+                    last=escape_markdown(new_mem.last_name or first_name),
+                    fullname=escape_markdown(fullname),
+                    username=username,
+                    mention=mention,
+                    count=count,
+                    chatname=escape_markdown(chat.title),
+                    id=new_mem.id,
                 )
+
+                if not cust_welcome:
+                    # e.g. a welcome photo/video without a caption
+                    keyb = []
+                if not cust_welcome or sql.is_default_welcome(cust_welcome):
+                    cust_welcome = random.choice(WELCOME_LINES)
+
+                valid_format = escape_invalid_curly_brackets(
+                    cust_welcome, VALID_WELCOME_FORMATTERS
+                )
+                res = valid_format.format(**welcome_values)
+
+                backup_message = random.choice(WELCOME_LINES).format(**welcome_values)
                 keyboard = InlineKeyboardMarkup(keyb)
 
         else:
@@ -566,10 +564,8 @@ def left_member(update: Update, context: CallbackContext):
                 left_mem.first_name or "PersonWithNoName"
             )  # edge case of empty name - occurs for some bugs.
             if cust_goodbye:
-                if cust_goodbye == sql.DEFAULT_GOODBYE:
-                    cust_goodbye = random.choice(sql.DEFAULT_GOODBYE_MESSAGES).format(
-                        first=escape_markdown(first_name)
-                    )
+                if sql.is_default_goodbye(cust_goodbye):
+                    cust_goodbye = random.choice(GOODBYE_LINES)
                 if left_mem.last_name:
                     fullname = escape_markdown(f"{first_name} {left_mem.last_name}")
                 else:
@@ -598,8 +594,8 @@ def left_member(update: Update, context: CallbackContext):
                 keyb = build_keyboard(buttons)
 
             else:
-                res = random.choice(sql.DEFAULT_GOODBYE_MESSAGES).format(
-                    first=first_name
+                res = random.choice(GOODBYE_LINES).format(
+                    first=escape_markdown(first_name)
                 )
                 keyb = []
 
@@ -609,7 +605,7 @@ def left_member(update: Update, context: CallbackContext):
                 update,
                 res,
                 keyboard,
-                random.choice(sql.DEFAULT_GOODBYE_MESSAGES).format(first=first_name),
+                random.choice(GOODBYE_LINES).format(first=escape_markdown(first_name)),
             )
 
 

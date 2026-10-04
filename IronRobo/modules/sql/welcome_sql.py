@@ -226,6 +226,15 @@ DEFAULT_GOODBYE_MESSAGES = [
 # Line 111 to 152 are references from https://bindingofisaac.fandom.com/wiki/Fortune_Telling_Machine
 
 
+def is_default_welcome(text):
+    """True for welcome texts nobody chose: the default or an old built-in one."""
+    return text == DEFAULT_WELCOME or text in DEFAULT_WELCOME_MESSAGES
+
+
+def is_default_goodbye(text):
+    return text == DEFAULT_GOODBYE or text in DEFAULT_GOODBYE_MESSAGES
+
+
 class Welcome(BASE):
     __tablename__ = "welcome_pref"
     chat_id = Column(String(14), primary_key=True)
@@ -233,12 +242,10 @@ class Welcome(BASE):
     should_goodbye = Column(Boolean, default=True)
     custom_content = Column(UnicodeText, default=None)
 
-    custom_welcome = Column(
-        UnicodeText, default=random.choice(DEFAULT_WELCOME_MESSAGES)
-    )
+    custom_welcome = Column(UnicodeText, default=DEFAULT_WELCOME)
     welcome_type = Column(Integer, default=Types.TEXT.value)
 
-    custom_leave = Column(UnicodeText, default=random.choice(DEFAULT_GOODBYE_MESSAGES))
+    custom_leave = Column(UnicodeText, default=DEFAULT_GOODBYE)
     leave_type = Column(Integer, default=Types.TEXT.value)
 
     clean_welcome = Column(BigInteger)

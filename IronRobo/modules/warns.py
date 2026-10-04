@@ -5,6 +5,7 @@ from typing import Optional
 import telegram
 from IronRobo import TIGERS, WOLVES, dispatcher
 from IronRobo.modules.disable import DisableAbleCommandHandler
+from IronRobo.modules.helper_funcs.ironman_strings import pick
 from IronRobo.modules.helper_funcs.chat_status import (
     bot_admin,
     can_restrict,
@@ -89,19 +90,11 @@ def warn(
         sql.reset_warns(user.id, chat.id)
         if soft_warn:  # punch
             chat.unban_member(user.id)
-            reply = (
-                f"<code>❕</code><b>Punch Event</b>\n"
-                f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
-                f"<code> </code><b>•  Count:</b> {limit}"
-            )
+            reply = pick("warn_kick", user=mention_html(user.id, html.escape(user.first_name)))
 
         else:  # ban
             chat.kick_member(user.id)
-            reply = (
-                f"<code>❕</code><b>Ban Event</b>\n"
-                f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
-                f"<code> </code><b>•  Count:</b> {limit}"
-            )
+            reply = pick("warn_ban", user=mention_html(user.id, html.escape(user.first_name)))
 
         for warn_reason in reasons:
             reply += f"\n - {html.escape(warn_reason)}"
@@ -128,10 +121,10 @@ def warn(
             ]
         )
 
-        reply = (
-            f"<code>❕</code><b>Warn Event</b>\n"
-            f"<code> </code><b>•  User:</b> {mention_html(user.id, user.first_name)}\n"
-            f"<code> </code><b>•  Count:</b> {num_warns}/{limit}"
+        reply = pick(
+            "warn",
+            user=mention_html(user.id, html.escape(user.first_name)),
+            count=f"{num_warns}/{limit}",
         )
         if reason:
             reply += f"\n<code> </code><b>•  Reason:</b> {html.escape(reason)}"

@@ -16,6 +16,7 @@ from IronRobo import (
     dispatcher,
 )
 from IronRobo.modules.disable import DisableAbleCommandHandler
+from IronRobo.modules.helper_funcs.ironman_strings import pick
 from IronRobo.modules.helper_funcs.chat_status import (
     bot_admin,
     can_restrict,
@@ -109,10 +110,7 @@ def ban(update: Update, context: CallbackContext) -> str:
             return log
 
         # bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
-        reply = (
-            f"<code>❕</code><b>Ban Event</b>\n"
-            f"<code> </code><b>•  User:</b> {mention_html(member.user.id, html.escape(member.user.first_name))}"
-        )
+        reply = pick("ban", user=mention_html(member.user.id, html.escape(member.user.first_name)))
         if reason:
             reply += f"\n<code> </code><b>•  Reason:</b> \n{html.escape(reason)}"
         bot.sendMessage(chat.id, reply, parse_mode=ParseMode.HTML)
@@ -201,8 +199,11 @@ def temp_ban(update: Update, context: CallbackContext) -> str:
         # bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
         bot.sendMessage(
             chat.id,
-            f"Banned! User {mention_html(member.user.id, html.escape(member.user.first_name))} "
-            f"will be banned for {time_val}.",
+            pick(
+                "tban",
+                user=mention_html(member.user.id, html.escape(member.user.first_name)),
+                time=html.escape(time_val),
+            ),
             parse_mode=ParseMode.HTML,
         )
         return log
@@ -268,7 +269,7 @@ def punch(update: Update, context: CallbackContext) -> str:
         # bot.send_sticker(chat.id, BAN_STICKER)  # banhammer marie sticker
         bot.sendMessage(
             chat.id,
-            f"One Punched! {mention_html(member.user.id, html.escape(member.user.first_name))}.",
+            pick("kick", user=mention_html(member.user.id, html.escape(member.user.first_name))),
             parse_mode=ParseMode.HTML,
         )
         log = (
@@ -339,7 +340,10 @@ def unban(update: Update, context: CallbackContext) -> str:
         return log_message
 
     chat.unban_member(user_id)
-    message.reply_text("Yep, this user can join!")
+    message.reply_text(
+        pick("unban", user=mention_html(member.user.id, html.escape(member.user.first_name))),
+        parse_mode=ParseMode.HTML,
+    )
 
     log = (
         f"<b>{html.escape(chat.title)}:</b>\n"

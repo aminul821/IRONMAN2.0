@@ -143,6 +143,7 @@ def add_filter(
     is_video=False,
     buttons=None,
 ):
+    _invalidate(chat_id, keyword)
     global CHAT_FILTERS
 
     if buttons is None:
@@ -188,6 +189,7 @@ def add_filter(
 
 
 def new_add_filter(chat_id, keyword, reply_text, file_type, file_id, buttons):
+    _invalidate(chat_id, keyword)
     global CHAT_FILTERS
 
     if buttons is None:
@@ -236,6 +238,7 @@ def new_add_filter(chat_id, keyword, reply_text, file_type, file_id, buttons):
 
 
 def remove_filter(chat_id, keyword):
+    _invalidate(chat_id, keyword)
     global CHAT_FILTERS
     with CUST_FILT_LOCK:
         filt = SESSION.query(CustomFilters).get((str(chat_id), keyword))
@@ -277,14 +280,42 @@ def get_chat_filters(chat_id):
         SESSION.close()
 
 
+# reply_filter looks a filter and its buttons up every time it triggers;
+# keep them in memory so a match doesn't wait on the database.
+_FILTER_CACHE = {}
+_BUTTON_CACHE = {}
+_CACHE_LOCK = threading.RLock()
+
+
+def _invalidate(chat_id, keyword=None):
+    with _CACHE_LOCK:
+        if keyword is None:
+            for cache in (_FILTER_CACHE, _BUTTON_CACHE):
+                for key in [k for k in cache if k[0] == str(chat_id)]:
+                    del cache[key]
+        else:
+            _FILTER_CACHE.pop((str(chat_id), keyword), None)
+            _BUTTON_CACHE.pop((str(chat_id), keyword), None)
+
+
 def get_filter(chat_id, keyword):
+    key = (str(chat_id), keyword)
+    with _CACHE_LOCK:
+        if key in _FILTER_CACHE:
+            return _FILTER_CACHE[key]
     try:
-        return SESSION.query(CustomFilters).get((str(chat_id), keyword))
+        filt = SESSION.query(CustomFilters).get(key)
+        if filt is not None:
+            SESSION.expunge(filt)
     finally:
         SESSION.close()
+    with _CACHE_LOCK:
+        _FILTER_CACHE[key] = filt
+    return filt
 
 
 def add_note_button_to_db(chat_id, keyword, b_name, url, same_line):
+    _invalidate(chat_id, keyword)
     with BUTTON_LOCK:
         button = Buttons(chat_id, keyword, b_name, url, same_line)
         SESSION.add(button)
@@ -292,15 +323,42 @@ def add_note_button_to_db(chat_id, keyword, b_name, url, same_line):
 
 
 def get_buttons(chat_id, keyword):
+    key = (str(chat_id), keyword)
+    with _CACHE_LOCK:
+        if key in _BUTTON_CACHE:
+            return _BUTTON_CACHE[key]
     try:
-        return (
+        buttons = (
             SESSION.query(Buttons)
             .filter(Buttons.chat_id == str(chat_id), Buttons.keyword == keyword)
             .order_by(Buttons.id)
             .all()
         )
+        for btn in buttons:
+            SESSION.expunge(btn)
     finally:
         SESSION.close()
+    with _CACHE_LOCK:
+        _BUTTON_CACHE[key] = buttons
+    return buttons
+
+
+def _clear_cache_after(func):
+    """Also drop the cache after the change, so a reader can't re-cache old data."""
+
+    def wrapper(chat_id, keyword, *args, **kwargs):
+        try:
+            return func(chat_id, keyword, *args, **kwargs)
+        finally:
+            _invalidate(chat_id, keyword)
+
+    return wrapper
+
+
+add_filter = _clear_cache_after(add_filter)
+new_add_filter = _clear_cache_after(new_add_filter)
+remove_filter = _clear_cache_after(remove_filter)
+add_note_button_to_db = _clear_cache_after(add_note_button_to_db)
 
 
 def num_filters():
@@ -375,6 +433,7 @@ def __migrate_filters():
 
 
 def migrate_chat(old_chat_id, new_chat_id):
+    _invalidate(old_chat_id)
     with CUST_FILT_LOCK:
         chat_filters = (
             SESSION.query(CustomFilters)

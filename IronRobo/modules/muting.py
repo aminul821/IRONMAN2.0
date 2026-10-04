@@ -2,6 +2,7 @@ import html
 from typing import Optional
 
 from IronRobo import LOGGER, TIGERS, dispatcher
+from IronRobo.modules.helper_funcs.ironman_strings import pick
 from IronRobo.modules.helper_funcs.chat_status import (
     bot_admin,
     can_restrict,
@@ -83,7 +84,7 @@ def mute(update: Update, context: CallbackContext) -> str:
         bot.restrict_chat_member(chat.id, user_id, chat_permissions)
         bot.sendMessage(
             chat.id,
-            f"Muted <b>{html.escape(member.user.first_name)}</b> with no expiration date!",
+            pick("mute", user=mention_html(member.user.id, html.escape(member.user.first_name))),
             parse_mode=ParseMode.HTML,
         )
         return log
@@ -139,7 +140,7 @@ def unmute(update: Update, context: CallbackContext) -> str:
                 pass
             bot.sendMessage(
                 chat.id,
-                f"I shall allow <b>{html.escape(member.user.first_name)}</b> to text!",
+                pick("unmute", user=mention_html(member.user.id, html.escape(member.user.first_name))),
                 parse_mode=ParseMode.HTML,
             )
             return (
@@ -213,7 +214,11 @@ def temp_mute(update: Update, context: CallbackContext) -> str:
             )
             bot.sendMessage(
                 chat.id,
-                f"Muted <b>{html.escape(member.user.first_name)}</b> for {time_val}!",
+                pick(
+                    "tmute",
+                    user=mention_html(member.user.id, html.escape(member.user.first_name)),
+                    time=html.escape(time_val),
+                ),
                 parse_mode=ParseMode.HTML,
             )
             return log

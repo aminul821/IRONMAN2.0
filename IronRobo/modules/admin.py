@@ -8,6 +8,7 @@ from telegram.utils.helpers import mention_html
 
 from IronRobo import DRAGONS, dispatcher
 from IronRobo.modules.disable import DisableAbleCommandHandler
+from IronRobo.modules.helper_funcs.ironman_strings import pick
 from IronRobo.modules.helper_funcs.chat_status import (
     bot_admin,
     can_pin,
@@ -100,7 +101,10 @@ def promote(update: Update, context: CallbackContext) -> str:
 
     bot.sendMessage(
         chat.id,
-        f"Sucessfully promoted <b>{user_member.user.first_name or user_id}</b>!",
+        pick(
+            "promote",
+            user=mention_html(user_id, html.escape(user_member.user.first_name or str(user_id))),
+        ),
         parse_mode=ParseMode.HTML,
     )
 
@@ -168,7 +172,10 @@ def demote(update: Update, context: CallbackContext) -> str:
 
         bot.sendMessage(
             chat.id,
-            f"Sucessfully demoted <b>{user_member.user.first_name or user_id}</b>!",
+            pick(
+                "demote",
+                user=mention_html(user_id, html.escape(user_member.user.first_name or str(user_id))),
+            ),
             parse_mode=ParseMode.HTML,
         )
 
