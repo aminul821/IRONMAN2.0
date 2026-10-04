@@ -15,7 +15,7 @@ COPY --from=denoland/deno:bin /deno /usr/local/bin/deno
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --upgrade pip setuptools wheel && \
+RUN pip install --upgrade pip wheel "setuptools<81" && \
     pip install -r requirements.txt
 
 COPY . .

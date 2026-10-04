@@ -1,3 +1,7 @@
+# APScheduler 3.6 (used by python-telegram-bot 13) needs pkg_resources,
+# which setuptools 81+ removed
+setuptools<81
+
 # Telegram libraries
 python-telegram-bot==13.15
 Pyrogram==1.4.16
@@ -43,3 +47,4 @@ pytz
 psutil
 ujson
 pyrate-limiter<3
+regex
