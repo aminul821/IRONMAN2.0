@@ -31,6 +31,7 @@ logging.basicConfig(
 logging.getLogger("apscheduler").setLevel(logging.WARNING)
 logging.getLogger("pyrogram").setLevel(logging.WARNING)
 logging.getLogger("telethon").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 LOGGER = logging.getLogger(__name__)
 
