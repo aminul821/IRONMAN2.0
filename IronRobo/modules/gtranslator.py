@@ -1,15 +1,12 @@
 import html
 
-from gpytranslate import Translator
 from IronRobo import pbot
+from IronRobo.utils.translate import TranslateUnavailable, translate
 from pyrogram import filters
 from pyrogram.types import Message
 
-trans = Translator()
-
-
 @pbot.on_message(filters.command(["tr", "tl"]))
-async def translate(_, message: Message) -> None:
+async def translate_cmd(_, message: Message) -> None:
     reply_msg = message.reply_to_message
     if not reply_msg:
         await message.reply_text("Reply to a message to translate it!")
@@ -18,21 +15,21 @@ async def translate(_, message: Message) -> None:
     if not to_translate:
         await message.reply_text("That message has no text to translate!")
         return
-    try:
-        args = message.text.split()[1].lower()
-        if "//" in args:
-            source, dest = args.split("//", 1)
+    args = message.text.split()
+    source, dest = "auto", "en"
+    if len(args) > 1:
+        lang = args[1].lower()
+        if "//" in lang:
+            source, dest = lang.split("//", 1)
         else:
-            source = await trans.detect(to_translate)
-            dest = args
-    except IndexError:
-        source = await trans.detect(to_translate)
-        dest = "en"
+            dest = lang
     try:
-        translation = await trans(to_translate, sourcelang=source, targetlang=dest)
-    except Exception as e:
-        await message.reply_text(f"Translation failed: {html.escape(str(e))}", parse_mode="html")
+        translation = await translate(to_translate, source=source, dest=dest)
+    except TranslateUnavailable:
+        await message.reply_text("Google Translate is busy right now, try again in a minute.")
         return
+    if source == "auto":
+        source = translation.lang or "auto"
     reply = (
         f"<b>Translated from {html.escape(source)} to {html.escape(dest)}</b>:\n"
         f"<code>{html.escape(translation.text)}</code>"

@@ -4,8 +4,19 @@ import os
 import sys
 import time
 
+import warnings
+
+# APScheduler 3.6 (used by python-telegram-bot 13) imports pkg_resources,
+# which warns on every start; setuptools is pinned so it keeps working.
+warnings.filterwarnings("ignore", message="pkg_resources is deprecated")
+
 import spamwatch
 import telegram.ext as tg
+from telegram.utils.deprecate import TelegramDeprecationWarning
+
+# python-telegram-bot 13 warns about every old-style handler on each update,
+# which floods the logs without anything to act on.
+warnings.filterwarnings("ignore", category=TelegramDeprecationWarning)
 from pyrogram import Client, errors
 from telethon import TelegramClient
 

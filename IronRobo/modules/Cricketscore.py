@@ -29,7 +29,7 @@ async def cricket_score(event):
     except Exception:
         await event.reply("Cricinfo isn't reachable right now, try again later.")
         return
-    soup = BeautifulSoup(page, "html.parser")
+    soup = BeautifulSoup(page, "xml")
     matches = [m.get_text().strip() for m in soup.find_all("description")]
     matches = [m for m in matches if m and "cricinfo" not in m.lower()]
     if not matches:

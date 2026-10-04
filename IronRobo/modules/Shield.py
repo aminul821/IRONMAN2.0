@@ -3,13 +3,13 @@ import os
 import re
 
 from better_profanity import profanity
-from gpytranslate import Translator
 from telethon import events
 
 from IronRobo import BOT_ID, LOGGER
 from IronRobo import telethn as tbot
 from IronRobo.events import register
 from IronRobo.modules.sql_extended import shield_sql
+from IronRobo.utils.translate import detect
 from IronRobo.modules.sql_extended.nsfw_watch_sql import (
     add_nsfwatch,
     is_nsfwatch_indb,
@@ -18,8 +18,6 @@ from IronRobo.modules.sql_extended.nsfw_watch_sql import (
 
 # The NSFW media watcher itself lives in the "NSFW Watch" module; /gshield just
 # toggles the same setting.
-
-translator = Translator()
 
 _WORDLIST = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
@@ -169,7 +167,7 @@ async def shield_watcher(event):
         if len(text) < 4 or not any(c.isalpha() for c in text):
             return
         try:
-            lang = await translator.detect(text)
+            lang = await detect(text)
         except Exception as e:
             LOGGER.debug("Language detection failed: %s", e)
             return
