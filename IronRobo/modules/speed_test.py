@@ -30,10 +30,14 @@ def speedtestxyz_callback(update: Update, context: CallbackContext):
 
     if query.from_user.id in DEV_USERS:
         msg = update.effective_message.edit_text("Running a speedtest....")
-        speed = speedtest.Speedtest()
-        speed.get_best_server()
-        speed.download()
-        speed.upload()
+        try:
+            speed = speedtest.Speedtest(secure=True)
+            speed.get_best_server()
+            speed.download()
+            speed.upload()
+        except Exception as e:
+            update.effective_message.edit_text(f"Speedtest failed: {e}")
+            return
         replymsg = "SpeedTest Results:"
 
         if query.data == "speedtest_image":

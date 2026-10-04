@@ -1,3 +1,4 @@
+import io
 import json, time, os
 from io import BytesIO
 
@@ -325,8 +326,8 @@ def export_data(update, context):
         },
     }
     baccinfo = json.dumps(backup, indent=4)
-    with open("IronRobo{}.backup".format(chat_id), "w") as f:
-        f.write(str(baccinfo))
+    backup_file = io.BytesIO(str(baccinfo).encode("utf-8"))
+    backup_file.name = "IronRobo{}.backup".format(chat_id)
     context.bot.sendChatAction(current_chat_id, "upload_document")
     tgl = time.strftime("%H:%M:%S - %d/%m/%Y", time.localtime(time.time()))
     try:
@@ -341,7 +342,7 @@ def export_data(update, context):
         pass
     context.bot.sendDocument(
         current_chat_id,
-        document=open("IronRobo{}.backup".format(chat_id), "rb"),
+        document=backup_file,
         caption="💾*Successfully Exported backup:*\nChat: `{}`\nChat ID: `{}`\nOn: `{}`\n\nNote: This `IronRobo-Backup` was specially made for notes 📚.".format(
             chat.title, chat_id, tgl
         ),
@@ -349,7 +350,6 @@ def export_data(update, context):
         reply_to_message_id=msg.message_id,
         parse_mode=ParseMode.MARKDOWN,
     )
-    os.remove("IronRobo{}.backup".format(chat_id))  # Cleaning file
 
 
 # Temporary data

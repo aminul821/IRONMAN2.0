@@ -137,7 +137,7 @@ def global_unignore_command(command):
             if command in GLOBAL_IGNORE_COMMANDS:
                 GLOBAL_IGNORE_COMMANDS.remove(command)
 
-            SESSION.delete(command)
+            SESSION.delete(unignored)
             SESSION.commit()
             return True
 
@@ -179,7 +179,7 @@ def __load_cleaner_list():
 
     try:
         GLOBAL_IGNORE_COMMANDS = {
-            int(x.command) for x in SESSION.query(CleanerBlueTextGlobal).all()
+            x.command for x in SESSION.query(CleanerBlueTextGlobal).all()
         }
     finally:
         SESSION.close()

@@ -1,52 +1,45 @@
+import html
 
 from gpytranslate import Translator
-from telegram.ext import CommandHandler, CallbackContext
-from telegram import (
-    Message,
-    Chat,
-    User,
-    ParseMode,
-    Update,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-)
-from IronRobo import dispatcher, pbot
+from IronRobo import pbot
 from pyrogram import filters
 from pyrogram.types import Message
-from IronRobo.modules.disable import DisableAbleCommandHandler
-
 
 trans = Translator()
 
 
-@pbot.on_message(filters.command(["tr"]))
+@pbot.on_message(filters.command(["tr", "tl"]))
 async def translate(_, message: Message) -> None:
     reply_msg = message.reply_to_message
     if not reply_msg:
         await message.reply_text("Reply to a message to translate it!")
         return
-    if reply_msg.caption:
-        to_translate = reply_msg.caption
-    elif reply_msg.text:
-        to_translate = reply_msg.text
+    to_translate = reply_msg.caption or reply_msg.text
+    if not to_translate:
+        await message.reply_text("That message has no text to translate!")
+        return
     try:
         args = message.text.split()[1].lower()
         if "//" in args:
-            source = args.split("//")[0]
-            dest = args.split("//")[1]
+            source, dest = args.split("//", 1)
         else:
             source = await trans.detect(to_translate)
             dest = args
     except IndexError:
         source = await trans.detect(to_translate)
         dest = "en"
-    translation = await trans(to_translate, sourcelang=source, targetlang=dest)
+    try:
+        translation = await trans(to_translate, sourcelang=source, targetlang=dest)
+    except Exception as e:
+        await message.reply_text(f"Translation failed: {html.escape(str(e))}", parse_mode="html")
+        return
     reply = (
-        f"<b>Translated from {source} to {dest}</b>:\n"
-        f"<code>{translation.text}</code>"
+        f"<b>Translated from {html.escape(source)} to {html.escape(dest)}</b>:\n"
+        f"<code>{html.escape(translation.text)}</code>"
     )
 
     await message.reply_text(reply, parse_mode="html")
+
 
 __help__ = """ 
 Use this module to translate stuff!

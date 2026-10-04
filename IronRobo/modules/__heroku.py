@@ -1,4 +1,5 @@
 import asyncio
+import json
 import math
 import os
 
@@ -9,7 +10,13 @@ from IronRobo import telethn as borg, HEROKU_APP_NAME, HEROKU_API_KEY, OWNER_ID
 from IronRobo.events import register
 
 heroku_api = "https://api.heroku.com"
-Heroku = heroku3.from_key(HEROKU_API_KEY)
+NOT_CONFIGURED = "`[HEROKU]:`\nPlease set **HEROKU_API_KEY** and **HEROKU_APP_NAME** first."
+
+
+def get_heroku():
+    if not HEROKU_API_KEY:
+        return None
+    return heroku3.from_key(HEROKU_API_KEY)
 
 
 @register(pattern="^/(set|see|del) var(?: |$)(.*)(?: |$)([\s\S]*)")
@@ -24,10 +31,14 @@ async def variable(var):
     Manage most of ConfigVars setting, set new var, get current var,
     or delete var...
     """
-    if HEROKU_APP_NAME is not None:
-        app = Heroku.app(HEROKU_APP_NAME)
-    else:
-        return await var.reply("`[HEROKU]:" "\nPlease setup your` **HEROKU_APP_NAME**")
+    if not HEROKU_API_KEY or not HEROKU_APP_NAME:
+        return await var.reply(NOT_CONFIGURED)
+    try:
+        app = await asyncio.get_running_loop().run_in_executor(
+            None, lambda: get_heroku().app(HEROKU_APP_NAME)
+        )
+    except Exception as e:
+        return await var.reply(f"`[HEROKU]: {e}`")
     exe = var.pattern_match.group(1)
     heroku_var = app.config()
     if exe == "see":
@@ -88,7 +99,7 @@ async def variable(var):
             )
         heroku_var[variable] = value
     elif exe == "del":
-        m = await var.edit("`Getting information to deleting variable...`")
+        m = await var.reply("`Getting information to deleting variable...`")
         try:
             variable = var.pattern_match.group(2).split()[0]
         except IndexError:
@@ -112,13 +123,15 @@ async def dyno_usage(dyno):
     """
     Get your account Dyno Usage
     """
+    if not HEROKU_API_KEY:
+        return await dyno.reply(NOT_CONFIGURED)
     die = await dyno.reply("**Processing...**")
     useragent = (
         "Mozilla/5.0 (Linux; Android 10; SM-G975F) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/80.0.3987.149 Mobile Safari/537.36"
     )
-    user_id = Heroku.account().id
+    user_id = get_heroku().account().id
     headers = {
         "User-Agent": useragent,
         "Authorization": f"Bearer {HEROKU_API_KEY}",
@@ -126,7 +139,7 @@ async def dyno_usage(dyno):
     }
     path = "/accounts/" + user_id + "/actions/get-quota"
     r = requests.get(heroku_api + path, headers=headers)
-    if r.status_code != 200:
+    if r.status_code != 200 or not r.json().get("account_quota"):
         return await die.edit(
             "`Error: something bad happened`\n\n" f">.`{r.reason}`\n"
         )
@@ -168,7 +181,7 @@ async def dyno_usage(dyno):
     )
 
 
-@register(pattern="^/logs$")
+@register(pattern="^/herokulogs$")
 async def _(dyno):
     if dyno.fwd_from:
         return
@@ -177,8 +190,7 @@ async def _(dyno):
     else:
         return
     try:
-        Heroku = heroku3.from_key(HEROKU_API_KEY)
-        app = Heroku.app(HEROKU_APP_NAME)
+        app = get_heroku().app(HEROKU_APP_NAME)
     except:
         return await dyno.reply(
             " Please make sure your Heroku API Key, Your App name are configured correctly in the heroku"
@@ -199,15 +211,16 @@ async def _(dyno):
     return os.remove("logs.txt")
 
 
-def prettyjson(obj, indent=2, maxlinelength=80):
-    """Renders JSON content with indentation and line splits/concatenations to fit maxlinelength.
-    Only dicts, lists and basic types are supported"""
+def prettyjson(obj, indent=2):
+    return json.dumps(obj, indent=indent, ensure_ascii=False)
 
-    items, _ = getsubitems(
-        obj,
-        itemkey="",
-        islast=True,
-        maxlinelength=maxlinelength - indent,
-        indent=indent,
-    )
-    return indentitems(items, indent, level=0)
+
+__help__ = """
+*Heroku (owner only):*
+ • `/see var <name>`*:* Shows a config var (no name: all of them)
+ • `/set var <name> <value>`*:* Sets a config var
+ • `/del var <name>`*:* Deletes a config var
+ • `/usage`*:* Shows the dyno hours used
+ • `/herokulogs`*:* Sends the Heroku app logs
+"""
+__mod_name__ = "Heroku"

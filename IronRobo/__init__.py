@@ -1,9 +1,10 @@
+import json
 import logging
 import os
 import sys
 import time
-import spamwatch
 
+import spamwatch
 import telegram.ext as tg
 from pyrogram import Client, errors
 from telethon import TelegramClient
@@ -16,91 +17,97 @@ logging.basicConfig(
     handlers=[logging.FileHandler("log.txt"), logging.StreamHandler()],
     level=logging.INFO,
 )
+logging.getLogger("apscheduler").setLevel(logging.WARNING)
+logging.getLogger("pyrogram").setLevel(logging.WARNING)
+logging.getLogger("telethon").setLevel(logging.WARNING)
 
 LOGGER = logging.getLogger(__name__)
 
-# if version < 3.6, stop bot.
-if sys.version_info[0] < 3 or sys.version_info[1] < 6:
+# if version < 3.9, stop bot.
+if sys.version_info < (3, 9):
     LOGGER.error(
-        "You MUST have a python version of at least 3.6! Multiple features depend on this. Bot quitting."
+        "You MUST have a python version of at least 3.9! Multiple features depend on this. Bot quitting."
     )
     quit(1)
 
-ENV = bool(os.environ.get("ENV", False))
+
+def _env_bool(name, default=False):
+    value = os.environ.get(name)
+    if value is None or value.strip() == "":
+        return default
+    return value.strip().lower() not in ("0", "false", "no", "off", "none")
+
+
+def _env_int(name, default=None):
+    value = os.environ.get(name)
+    if value is None or value.strip() == "":
+        return default
+    try:
+        return int(value.strip())
+    except ValueError:
+        raise Exception(f"Your {name} env variable is not a valid integer.")
+
+
+def _env_id_set(name):
+    try:
+        return set(int(x) for x in os.environ.get(name, "").replace(",", " ").split())
+    except ValueError:
+        raise Exception(f"Your {name} list does not contain valid integers.")
+
+
+ENV = _env_bool("ENV", False)
 
 if ENV:
     TOKEN = os.environ.get("TOKEN", None)
-
-    try:
-        OWNER_ID = int(os.environ.get("OWNER_ID", None))
-    except ValueError:
-        raise Exception("Your OWNER_ID env variable is not a valid integer.")
-
-    JOIN_LOGGER = os.environ.get("JOIN_LOGGER", None)
+    OWNER_ID = _env_int("OWNER_ID")
+    JOIN_LOGGER = _env_int("JOIN_LOGGER")
     OWNER_USERNAME = os.environ.get("OWNER_USERNAME", None)
 
-    try:
-        DRAGONS = set(int(x) for x in os.environ.get("DRAGONS", "").split())
-        DEV_USERS = set(int(x) for x in os.environ.get("DEV_USERS", "").split())
-    except ValueError:
-        raise Exception("Your sudo or dev users list does not contain valid integers.")
+    DRAGONS = _env_id_set("DRAGONS")
+    DEV_USERS = _env_id_set("DEV_USERS")
+    DEMONS = _env_id_set("DEMONS")
+    WOLVES = _env_id_set("WOLVES")
+    TIGERS = _env_id_set("TIGERS")
 
-    try:
-        DEMONS = set(int(x) for x in os.environ.get("DEMONS", "").split())
-    except ValueError:
-        raise Exception("Your support users list does not contain valid integers.")
-
-    try:
-        WOLVES = set(int(x) for x in os.environ.get("WOLVES", "").split())
-    except ValueError:
-        raise Exception("Your whitelisted users list does not contain valid integers.")
-
-    try:
-        TIGERS = set(int(x) for x in os.environ.get("TIGERS", "").split())
-    except ValueError:
-        raise Exception("Your tiger users list does not contain valid integers.")
-
-    INFOPIC = bool(os.environ.get("INFOPIC", False))
-    EVENT_LOGS = os.environ.get("EVENT_LOGS", None)
-    WEBHOOK = bool(os.environ.get("WEBHOOK", False))
+    INFOPIC = _env_bool("INFOPIC", True)
+    EVENT_LOGS = _env_int("EVENT_LOGS")
+    WEBHOOK = _env_bool("WEBHOOK", False)
     URL = os.environ.get("URL", "")  # Does not contain token
-    PORT = int(os.environ.get("PORT", 5000))
+    PORT = _env_int("PORT", 5000)
     CERT_PATH = os.environ.get("CERT_PATH")
-    API_ID = os.environ.get("API_ID", None)
+    API_ID = _env_int("API_ID")
     API_HASH = os.environ.get("API_HASH", None)
-    DB_URI = os.environ.get("DATABASE_URL")
+    DB_URI = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
     MONGO_DB_URI = os.environ.get("MONGO_DB_URI", None)
+    REDIS_URL = os.environ.get("REDIS_URL", None)
     DONATION_LINK = os.environ.get("DONATION_LINK")
     HEROKU_API_KEY = os.environ.get("HEROKU_API_KEY", None)
     HEROKU_APP_NAME = os.environ.get("HEROKU_APP_NAME", None)
     TEMP_DOWNLOAD_DIRECTORY = os.environ.get("TEMP_DOWNLOAD_DIRECTORY", "./")
-    OPENWEATHERMAP_ID = os.environ.get("OPENWEATHERMAP_ID", None)
+    OPENWEATHERMAP_ID = os.environ.get("OPENWEATHERMAP_ID") or os.environ.get(
+        "API_OPENWEATHER"
+    )
     VIRUS_API_KEY = os.environ.get("VIRUS_API_KEY", None)
     LOAD = os.environ.get("LOAD", "").split()
-    BOT_ID = int(os.environ.get("BOT_ID", None))
-    NO_LOAD = os.environ.get("NO_LOAD", "translation").split()
-    DEL_CMDS = bool(os.environ.get("DEL_CMDS", False))
-    STRICT_GBAN = bool(os.environ.get("STRICT_GBAN", False))
-    WORKERS = int(os.environ.get("WORKERS", 8))
-    BAN_STICKER = os.environ.get("BAN_STICKER", "CAADAgADOwADPPEcAXkko5EB3YGYAg")
-    ALLOW_EXCL = os.environ.get("ALLOW_EXCL", False)
+    BOT_ID = _env_int("BOT_ID")
+    NO_LOAD = os.environ.get("NO_LOAD", "").split()
+    DEL_CMDS = _env_bool("DEL_CMDS", False)
+    STRICT_GBAN = _env_bool("STRICT_GBAN", True)
+    WORKERS = _env_int("WORKERS", 8)
+    BAN_STICKER = os.environ.get("BAN_STICKER", "")
+    ALLOW_EXCL = _env_bool("ALLOW_EXCL", True)
     CASH_API_KEY = os.environ.get("CASH_API_KEY", None)
     TIME_API_KEY = os.environ.get("TIME_API_KEY", None)
-    AI_API_KEY = os.environ.get("AI_API_KEY", None)
+    AI_API_KEY = os.environ.get("AI_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+    AI_MODEL = os.environ.get("AI_MODEL", "claude-opus-5-5")
     WALL_API = os.environ.get("WALL_API", None)
     SUPPORT_CHAT = os.environ.get("SUPPORT_CHAT", None)
     SPAMWATCH_SUPPORT_CHAT = os.environ.get("SPAMWATCH_SUPPORT_CHAT", None)
-    SPAMWATCH_API = os.environ.get("SPAMWATCH_API", None)
-    STRICT_GMUTE = bool(os.environ.get('STRICT_GMUTE', False))
-    IBM_WATSON_CRED_URL = os.environ.get("IBM_WATSON_CRED_URL", None)
-    IBM_WATSON_CRED_PASSWORD = os.environ.get("IBM_WATSON_CRED_PASSWORD", None)
-
-    ALLOW_CHATS = os.environ.get("ALLOW_CHATS", True)
-
-    try:
-        BL_CHATS = set(int(x) for x in os.environ.get("BL_CHATS", "").split())
-    except ValueError:
-        raise Exception("Your blacklisted chats list does not contain valid integers.")
+    SPAMWATCH_API = os.environ.get("SPAMWATCH_API") or os.environ.get("sw_api")
+    STRICT_GMUTE = _env_bool("STRICT_GMUTE", False)
+    GENIUS_API_TOKEN = os.environ.get("GENIUS_API_TOKEN", None)
+    ALLOW_CHATS = _env_bool("ALLOW_CHATS", True)
+    BL_CHATS = _env_id_set("BL_CHATS")
 
 else:
     from IronRobo.config import Development as Config
@@ -114,7 +121,7 @@ else:
 
     JOIN_LOGGER = Config.JOIN_LOGGER
     OWNER_USERNAME = Config.OWNER_USERNAME
-    ALLOW_CHATS = Config.ALLOW_CHATS
+    ALLOW_CHATS = getattr(Config, "ALLOW_CHATS", True)
     try:
         DRAGONS = set(int(x) for x in Config.DRAGONS or [])
         DEV_USERS = set(int(x) for x in Config.DEV_USERS or [])
@@ -163,6 +170,7 @@ else:
     CASH_API_KEY = Config.CASH_API_KEY
     TIME_API_KEY = Config.TIME_API_KEY
     AI_API_KEY = Config.AI_API_KEY
+    AI_MODEL = getattr(Config, "AI_MODEL", "claude-opus-5-5")
     WALL_API = Config.WALL_API
     SUPPORT_CHAT = Config.SUPPORT_CHAT
     SPAMWATCH_SUPPORT_CHAT = Config.SPAMWATCH_SUPPORT_CHAT
@@ -170,16 +178,53 @@ else:
     INFOPIC = Config.INFOPIC
     STRICT_GMUTE = Config.STRICT_GMUTE
     REDIS_URL = Config.REDIS_URL
-    
+    GENIUS_API_TOKEN = getattr(Config, "GENIUS_API_TOKEN", None)
+
     try:
         BL_CHATS = set(int(x) for x in Config.BL_CHATS or [])
     except ValueError:
         raise Exception("Your blacklisted chats list does not contain valid integers.")
 
+if not TOKEN:
+    raise Exception("TOKEN is missing! Get one from @BotFather and set it.")
+if OWNER_ID is None:
+    raise Exception("OWNER_ID is missing! Set it to your own Telegram user id.")
+if not API_ID or not API_HASH:
+    raise Exception("API_ID / API_HASH are missing! Get them from my.telegram.org.")
+
+# The numeric part of the bot token is the bot's user id.
+if not BOT_ID:
+    BOT_ID = int(TOKEN.split(":")[0])
+BOT_ID = int(BOT_ID)
+
+if not DB_URI:
+    raise Exception("DATABASE_URL is missing! A PostgreSQL database is required.")
+# Heroku/Render style URIs use "postgres://", which SQLAlchemy no longer accepts.
+if DB_URI.startswith("postgres://"):
+    DB_URI = DB_URI.replace("postgres://", "postgresql://", 1)
+
+if not SUPPORT_CHAT:
+    SUPPORT_CHAT = None
+elif SUPPORT_CHAT.startswith("@"):
+    SUPPORT_CHAT = SUPPORT_CHAT[1:]
+
+# Users promoted with /addsudo, /addsupport... are saved in elevated_users.json;
+# load them on top of the ones from the environment.
+_ELEVATED_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "elevated_users.json")
+if ENV and os.path.exists(_ELEVATED_FILE):
+    try:
+        with open(_ELEVATED_FILE) as _f:
+            _elevated = json.load(_f)
+        DRAGONS.update(int(x) for x in _elevated.get("sudos", []))
+        DEV_USERS.update(int(x) for x in _elevated.get("devs", []))
+        DEMONS.update(int(x) for x in _elevated.get("supports", []))
+        WOLVES.update(int(x) for x in _elevated.get("whitelists", []))
+        TIGERS.update(int(x) for x in _elevated.get("tigers", []))
+    except (ValueError, OSError) as e:
+        LOGGER.warning("Could not read elevated_users.json: %s", e)
+
 DRAGONS.add(OWNER_ID)
 DEV_USERS.add(OWNER_ID)
-DEV_USERS.add(1963390367)
-DEV_USERS.add(1999747024)
 
 if not SPAMWATCH_API:
     sw = None
@@ -187,10 +232,16 @@ if not SPAMWATCH_API:
 else:
     try:
         sw = spamwatch.Client(SPAMWATCH_API)
-    except:
+    except Exception:
         sw = None
         LOGGER.warning("Can't connect to SpamWatch!")
 
+# Pyrogram 1.x rejects the ids of supergroups/channels created after 2021
+# ("Peer id invalid"); widen its accepted id range.
+import pyrogram.utils as _pyro_utils
+
+_pyro_utils.MIN_CHANNEL_ID = -1009999999999
+_pyro_utils.MIN_CHAT_ID = -999999999999
 
 updater = tg.Updater(TOKEN, workers=WORKERS, use_context=True)
 telethn = TelegramClient("ironman", API_ID, API_HASH)

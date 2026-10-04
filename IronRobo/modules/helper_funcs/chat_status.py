@@ -378,6 +378,8 @@ def user_can_ban(func):
 def connection_status(func):
     @wraps(func)
     def connected_status(update: Update, context: CallbackContext, *args, **kwargs):
+        from IronRobo.modules.connection import connected
+
         conn = connected(
             context.bot,
             update,
@@ -401,8 +403,3 @@ def connection_status(func):
 
     return connected_status
 
-
-# Workaround for circular import with connection.py
-from IronRobo.modules import connection
-
-connected = connection.connected

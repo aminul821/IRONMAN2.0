@@ -5,7 +5,7 @@ import IronRobo.modules.sql.users_sql as user_sql
 from IronRobo import DEV_USERS, OWNER_ID, dispatcher
 from IronRobo.modules.helper_funcs.chat_status import dev_plus
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.error import BadRequest, Unauthorized
+from telegram.error import BadRequest, RetryAfter, TelegramError, Unauthorized
 from telegram.ext import (
     CallbackContext,
     CallbackQueryHandler,
@@ -59,6 +59,33 @@ def get_invalid_chats(update: Update, context: CallbackContext, remove: bool = F
             sleep(0.1)
             user_sql.rem_chat(muted_chat)
         return kicked_chats
+
+
+def get_muted_chats(update: Update, context: CallbackContext, leave: bool = False):
+    """Count (and optionally leave) the chats where the bot can't send messages."""
+    bot = context.bot
+    muted_chats = 0
+    chat_list = []
+    for chat in user_sql.get_all_chats():
+        cid = chat.chat_id
+        sleep(0.1)
+        try:
+            bot.send_chat_action(cid, "typing", timeout=60)
+        except (BadRequest, Unauthorized):
+            muted_chats += 1
+            chat_list.append(cid)
+        except RetryAfter as e:
+            sleep(e.retry_after)
+
+    if leave:
+        for muted_chat in chat_list:
+            sleep(0.1)
+            try:
+                bot.leave_chat(muted_chat, timeout=60)
+            except TelegramError:
+                pass
+            user_sql.rem_chat(muted_chat)
+    return muted_chats
 
 
 def get_invalid_gban(update: Update, context: CallbackContext, remove: bool = False):

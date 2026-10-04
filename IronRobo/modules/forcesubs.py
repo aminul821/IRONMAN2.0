@@ -16,7 +16,6 @@ from IronRobo import DRAGONS as SUDO_USERS
 from IronRobo import pbot
 from IronRobo.modules.sql_extended import forceSubscribe_sql as sql
 
-logging.basicConfig(level=logging.INFO)
 
 static_data_filter = filters.create(
     lambda _, __, query: query.data == "onUnMuteRequest"
@@ -72,6 +71,8 @@ def _onUnMuteRequest(client, cb):
 @pbot.on_message(filters.text & ~filters.private & ~filters.edited, group=1)
 def _check_member(client, message):
     chat_id = message.chat.id
+    if not message.from_user:
+        return
     chat_db = sql.fs_settings(chat_id)
     if chat_db:
         user_id = message.from_user.id
@@ -84,6 +85,7 @@ def _check_member(client, message):
             try:
                 client.get_chat_member(channel, user_id)
             except UserNotParticipant:
+                sent_message = None
                 try:
                     sent_message = message.reply_text(
                         "Welcome {} 🙏 \n **You havent joined our @{} Channel yet** 😭 \n \nPlease Join [Our Channel](https://t.me/{}) and hit the **UNMUTE ME** Button. \n \n ".format(
@@ -110,9 +112,11 @@ def _check_member(client, message):
                         chat_id, user_id, ChatPermissions(can_send_messages=False)
                     )
                 except ChatAdminRequired:
-                    sent_message.edit(
-                        "❗ **Ironman is not admin here..**\n__Give me ban permissions and retry.. \n#Ending FSub...__"
-                    )
+                    text = "❗ **Ironman is not admin here..**\n__Give me ban permissions and retry.. \n#Ending FSub...__"
+                    if sent_message:
+                        sent_message.edit(text)
+                    else:
+                        client.send_message(chat_id, text)
 
             except ChatAdminRequired:
                 client.send_message(
@@ -123,8 +127,11 @@ def _check_member(client, message):
 
 @pbot.on_message(filters.command(["forcesubscribe", "fsub"]) & ~filters.private)
 def config(client, message):
+    if not message.from_user:
+        message.reply_text("❗ Turn off anonymous admin mode to use this command.")
+        return
     user = client.get_chat_member(message.chat.id, message.from_user.id)
-    if user.status is "creator" or user.user.id in SUDO_USERS:
+    if user.status == "creator" or user.user.id in SUDO_USERS:
         chat_id = message.chat.id
         if len(message.command) > 1:
             input_str = message.command[1]
@@ -132,7 +139,7 @@ def config(client, message):
             if input_str.lower() in ("off", "no", "disable"):
                 sql.disapprove(chat_id)
                 message.reply_text("❌ **Force Subscribe is Disabled Successfully.**")
-            elif input_str.lower() in ("clear"):
+            elif input_str.lower() == "clear":
                 sent_message = message.reply_text(
                     "**Unmuting all members who are muted by me...**"
                 )
@@ -140,7 +147,7 @@ def config(client, message):
                     for chat_member in client.get_chat_members(
                         message.chat.id, filter="restricted"
                     ):
-                        if chat_member.restricted_by.id == (client.get_me()).id:
+                        if chat_member.restricted_by and chat_member.restricted_by.id == (client.get_me()).id:
                             client.unban_chat_member(chat_id, chat_member.user.id)
                             time.sleep(1)
                     sent_message.edit("✅ **UnMuted all members who are muted by me.**")
@@ -181,7 +188,7 @@ def config(client, message):
 
 __help__ = """
 *Force Subscribe:*
-❍ Yone can mute members who are not subscribed your channel until they subscribe
+❍ Ironman can mute members who are not subscribed your channel until they subscribe
 ❍ When enabled I will mute unsubscribed members and show them a unmute button. When they pressed the button I will unmute them
 *Setup*
 *Only creator*

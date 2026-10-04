@@ -11,9 +11,9 @@ from IronRobo.modules.disable import DisableAbleCommandHandler
 
 sites_list = {
     "Telegram": "https://api.telegram.org",
-    "Kaizoku": "https://animekaizoku.com",
-    "Kayo": "https://animekayo.com",
-    "Jikan": "https://api.jikan.moe/v3",
+    "GitHub": "https://api.github.com",
+    "Google": "https://www.google.com",
+    "Jikan": "https://api.jikan.moe/v4",
 }
 
 
@@ -49,21 +49,17 @@ def ping_func(to_ping: List[str]) -> List[str]:
     ping_result = []
 
     for each_ping in to_ping:
-
-        start_time = time.time()
         site_to_ping = sites_list[each_ping]
-        r = requests.get(site_to_ping)
-        end_time = time.time()
-        ping_time = str(round((end_time - start_time), 2)) + "s"
-
-        pinged_site = f"<b>{each_ping}</b>"
-
-        if each_ping == "Kaizoku" or each_ping == "Kayo":
-            pinged_site = f'<a href="{sites_list[each_ping]}">{each_ping}</a>'
-            ping_time = f"<code>{ping_time} (Status: {r.status_code})</code>"
-
-        ping_text = f"{pinged_site}: <code>{ping_time}</code>"
-        ping_result.append(ping_text)
+        start_time = time.time()
+        try:
+            r = requests.get(site_to_ping, timeout=10)
+            status = r.status_code
+        except requests.RequestException:
+            status = "unreachable"
+        ping_time = str(round((time.time() - start_time), 2)) + "s"
+        ping_result.append(
+            f"<b>{each_ping}</b>: <code>{ping_time} (Status: {status})</code>"
+        )
 
     return ping_result
 
@@ -90,9 +86,7 @@ def ping(update: Update, context: CallbackContext):
 @run_async
 @sudo_plus
 def pingall(update: Update, context: CallbackContext):
-    to_ping = ["Kaizoku", "Kayo", "Telegram", "Jikan"]
-    pinged_list = ping_func(to_ping)
-    pinged_list.insert(2, "")
+    pinged_list = ping_func(list(sites_list))
     uptime = get_readable_time((time.time() - StartTime))
 
     reply_msg = "⏱Ping results are:\n"

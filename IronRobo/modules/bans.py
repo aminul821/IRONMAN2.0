@@ -115,7 +115,7 @@ def ban(update: Update, context: CallbackContext) -> str:
         )
         if reason:
             reply += f"\n<code> </code><b>•  Reason:</b> \n{html.escape(reason)}"
-        bot.sendMessage(chat.id, reply, parse_mode=ParseMode.HTML, quote=False)
+        bot.sendMessage(chat.id, reply, parse_mode=ParseMode.HTML)
         return log
 
     except BadRequest as excp:
@@ -358,11 +358,11 @@ def unban(update: Update, context: CallbackContext) -> str:
 @bot_admin
 @can_restrict
 @gloggable
-def selfunban(context: CallbackContext, update: Update) -> str:
+def selfunban(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
     user = update.effective_user
     bot, args = context.bot, context.args
-    if user.id not in DRAGONS or user.id not in TIGERS:
+    if user.id not in DRAGONS and user.id not in TIGERS:
         return
 
     try:
@@ -371,7 +371,11 @@ def selfunban(context: CallbackContext, update: Update) -> str:
         message.reply_text("Give a valid chat ID.")
         return
 
-    chat = bot.getChat(chat_id)
+    try:
+        chat = bot.getChat(chat_id)
+    except BadRequest:
+        message.reply_text("I can't find that chat.")
+        return
 
     try:
         member = chat.get_member(user.id)

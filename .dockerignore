@@ -1,0 +1,7 @@
+.git
+*.session
+*.session-journal
+log.txt
+__pycache__
+IronRobo/config.py
+.env

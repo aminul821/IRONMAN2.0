@@ -1,7 +1,7 @@
-import requests
 from IronRobo import dispatcher
 from IronRobo.modules.disable import DisableAbleCommandHandler
-from telegram import ParseMode, Update
+from IronRobo.utils.paste import paste_text
+from telegram import Update
 from telegram.ext import CallbackContext, run_async
 
 
@@ -10,8 +10,10 @@ def paste(update: Update, context: CallbackContext):
     args = context.args
     message = update.effective_message
 
-    if message.reply_to_message:
-        data = message.reply_to_message.text
+    if message.reply_to_message and (
+        message.reply_to_message.text or message.reply_to_message.caption
+    ):
+        data = message.reply_to_message.text or message.reply_to_message.caption
 
     elif len(args) >= 1:
         data = message.text.split(None, 1)[1]
@@ -20,24 +22,20 @@ def paste(update: Update, context: CallbackContext):
         message.reply_text("What am I supposed to do with this?")
         return
 
-    key = (
-        requests.post("https://nekobin.com/api/documents", json={"content": data})
-        .json()
-        .get("result")
-        .get("key")
-    )
+    url = paste_text(data)
+    if not url:
+        message.reply_text("Paste services are not reachable right now, try again later.")
+        return
 
-    url = f"https://nekobin.com/{key}"
-
-    reply_text = f"Nekofied to *Nekobin* : {url}"
-
-    message.reply_text(
-        reply_text, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True
-    )
+    message.reply_text(f"Pasted: {url}", disable_web_page_preview=True)
 
 
 PASTE_HANDLER = DisableAbleCommandHandler("paste", paste)
 dispatcher.add_handler(PASTE_HANDLER)
 
+__help__ = """
+ • `/paste`*:* Reply to a message (or give text) to upload it to a paste service
+"""
+__mod_name__ = "Paste"
 __command_list__ = ["paste"]
 __handlers__ = [PASTE_HANDLER]

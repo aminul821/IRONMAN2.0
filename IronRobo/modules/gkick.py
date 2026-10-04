@@ -3,7 +3,7 @@ import html
 from telegram import Message, Update, Bot, User, Chat, ParseMode
 from typing import List, Optional
 from telegram.error import BadRequest, TelegramError
-from telegram.ext import run_async, CommandHandler, MessageHandler, Filters
+from telegram.ext import CallbackContext, CommandHandler
 from telegram.utils.helpers import mention_html
 from IronRobo import dispatcher, OWNER_ID, DEV_USERS, DRAGONS, STRICT_GBAN
 from IronRobo.modules.helper_funcs.chat_status import user_admin, is_user_admin
@@ -28,24 +28,23 @@ GKICK_ERRORS = {
     "Reply message not found"
 }
 
-@run_async
-def gkick(bot: Bot, update: Update, args: List[str]):
+def gkick(update: Update, context: CallbackContext):
+    bot, args = context.bot, context.args
     message = update.effective_message
     user_id = extract_user(message, args)
-    try:
-        user_chat = bot.get_chat(user_id)
-    except BadRequest as excp:
-        if excp.message in GKICK_ERRORS:
-            pass
-        else:
-            message.reply_text("User cannot be Globally kicked because: {}".format(excp.message))
-            return
-    except TelegramError:
-            pass
-
     if not user_id:
         message.reply_text("You do not seems to be referring to a user")
         return
+    user_chat = None
+    try:
+        user_chat = bot.get_chat(user_id)
+    except BadRequest as excp:
+        if excp.message not in GKICK_ERRORS:
+            message.reply_text("User cannot be Globally kicked because: {}".format(excp.message))
+            return
+    except TelegramError:
+        pass
+
     if int(user_id) in DEV_USERS or int(user_id) in DRAGONS:
         message.reply_text("OHHH! Someone's trying to gkick a sudo/support user! *Grabs popcorn*")
         return
@@ -56,19 +55,30 @@ def gkick(bot: Bot, update: Update, args: List[str]):
         message.reply_text("OHH... Let me kick myself.. No way... ")
         return
     chats = get_all_chats()
-    message.reply_text("Globally kicking user @{}".format(user_chat.username))
+    name = (
+        f"@{user_chat.username}"
+        if user_chat and user_chat.username
+        else (user_chat.first_name if user_chat else str(user_id))
+    )
+    message.reply_text("Globally kicking user {}".format(name))
+    kicked = 0
     for chat in chats:
         try:
-             bot.unban_chat_member(chat.chat_id, user_id)  # Unban_member = kick (and not ban)
+            bot.unban_chat_member(chat.chat_id, user_id)  # Unban_member = kick (and not ban)
+            kicked += 1
         except BadRequest as excp:
-            if excp.message in GKICK_ERRORS:
-                pass
-            else:
+            if excp.message not in GKICK_ERRORS:
                 message.reply_text("User cannot be Globally kicked because: {}".format(excp.message))
                 return
         except TelegramError:
             pass
+    message.reply_text(f"Done! Kicked from {kicked} chats.")
 
-GKICK_HANDLER = CommandHandler("gkick", gkick, pass_args=True,
-                              filters=CustomFilters.sudo_filter | CustomFilters.support_filter)
+
+GKICK_HANDLER = CommandHandler(
+    "gkick",
+    gkick,
+    filters=CustomFilters.sudo_filter | CustomFilters.support_filter,
+    run_async=True,
+)
 dispatcher.add_handler(GKICK_HANDLER)                              

@@ -25,9 +25,12 @@ APPROVE_INSERTION_LOCK = threading.RLock()
 
 def approve(chat_id, user_id):
     with APPROVE_INSERTION_LOCK:
-        approve_user = Approvals(str(chat_id), user_id)
-        SESSION.add(approve_user)
-        SESSION.commit()
+        try:
+            SESSION.merge(Approvals(str(chat_id), user_id))
+            SESSION.commit()
+        except Exception:
+            SESSION.rollback()
+            raise
 
 
 def is_approved(chat_id, user_id):

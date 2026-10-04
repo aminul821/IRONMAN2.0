@@ -1,148 +1,136 @@
-import math
+# Math commands, solved locally with SymPy (the newton.now.sh API is gone).
+import re
 
-import pynewtonmath as newton
+import sympy
 from IronRobo import dispatcher
 from IronRobo.modules.disable import DisableAbleCommandHandler
+from sympy.parsing.sympy_parser import (
+    convert_xor,
+    implicit_multiplication_application,
+    parse_expr,
+    standard_transformations,
+)
 from telegram import Update
-from telegram.ext import CallbackContext, run_async
+from telegram.ext import CallbackContext
+
+TRANSFORMS = standard_transformations + (
+    implicit_multiplication_application,
+    convert_xor,
+)
+MAX_INPUT = 200
+x = sympy.Symbol("x")
 
 
-@run_async
-def simplify(update: Update, context: CallbackContext):
-    args = context.args
+def _expr(text):
+    text = text.replace("(over)", "/").strip()
+    if not text:
+        raise ValueError("empty expression")
+    if len(text) > MAX_INPUT:
+        raise ValueError("expression too long")
+    return parse_expr(text, transformations=TRANSFORMS, local_dict={"x": x})
+
+
+def _split(text, seps="|l"):
+    """Split newton style "c|f(x)" / "clf(x)" input."""
+    match = re.match(r"^\s*([^|l]+?)\s*[%s]\s*(.+)$" % re.escape(seps), text)
+    if not match:
+        raise ValueError("bad format")
+    return match.group(1), match.group(2)
+
+
+def _fmt(value):
+    if isinstance(value, (list, tuple, set)):
+        return ", ".join(_fmt(v) for v in value) or "No solutions"
+    if isinstance(value, sympy.Basic):
+        value = sympy.nsimplify(value) if value.is_Float else value
+        text = str(value).replace("**", "^")
+        if value.is_number and not value.is_Integer and not value.is_Rational:
+            text += f" ≈ {sympy.N(value, 10)}"
+        return text
+    return str(value)
+
+
+def _simplify(t):
+    return sympy.simplify(_expr(t))
+
+
+def _factor(t):
+    return sympy.factor(_expr(t))
+
+
+def _derive(t):
+    return sympy.diff(_expr(t), x)
+
+
+def _integrate(t):
+    return f"{_fmt(sympy.integrate(_expr(t), x))} + C"
+
+
+def _zeroes(t):
+    return sympy.solve(_expr(t), x)
+
+
+def _tangent(t):
+    point, func = _split(t)
+    f = _expr(func)
+    c = _expr(point)
+    slope = sympy.diff(f, x).subs(x, c)
+    return sympy.expand(slope * (x - c) + f.subs(x, c))
+
+
+def _area(t):
+    bounds, func = _split(t)
+    start, end = bounds.split(":", 1)
+    return sympy.integrate(_expr(func), (x, _expr(start), _expr(end)))
+
+
+def _log(t):
+    if "l" in t or "|" in t:
+        base, value = _split(t)
+        return sympy.log(_expr(value), _expr(base))
+    return sympy.log(_expr(t))
+
+
+SOLVERS = {
+    "math": _simplify,
+    "factor": _factor,
+    "derive": _derive,
+    "integrate": _integrate,
+    "zeroes": _zeroes,
+    "tangent": _tangent,
+    "area": _area,
+    "cos": lambda t: sympy.cos(_expr(t)),
+    "sin": lambda t: sympy.sin(_expr(t)),
+    "tan": lambda t: sympy.tan(_expr(t)),
+    "arccos": lambda t: sympy.acos(_expr(t)),
+    "arcsin": lambda t: sympy.asin(_expr(t)),
+    "arctan": lambda t: sympy.atan(_expr(t)),
+    "abs": lambda t: sympy.Abs(_expr(t)),
+    "log": _log,
+}
+
+
+def solve(update: Update, context: CallbackContext):
     message = update.effective_message
-    message.reply_text(newton.simplify("{}".format(args[0])))
-
-
-@run_async
-def factor(update: Update, context: CallbackContext):
-    args = context.args
-    message = update.effective_message
-    message.reply_text(newton.factor("{}".format(args[0])))
-
-
-@run_async
-def derive(update: Update, context: CallbackContext):
-    args = context.args
-    message = update.effective_message
-    message.reply_text(newton.derive("{}".format(args[0])))
-
-
-@run_async
-def integrate(update: Update, context: CallbackContext):
-    args = context.args
-    message = update.effective_message
-    message.reply_text(newton.integrate("{}".format(args[0])))
-
-
-@run_async
-def zeroes(update: Update, context: CallbackContext):
-    args = context.args
-    message = update.effective_message
-    message.reply_text(newton.zeroes("{}".format(args[0])))
-
-
-@run_async
-def tangent(update: Update, context: CallbackContext):
-    args = context.args
-    message = update.effective_message
-    message.reply_text(newton.tangent("{}".format(args[0])))
-
-
-@run_async
-def area(update: Update, context: CallbackContext):
-    args = context.args
-    message = update.effective_message
-    message.reply_text(newton.area("{}".format(args[0])))
-
-
-@run_async
-def cos(update: Update, context: CallbackContext):
-    args = context.args
-    message = update.effective_message
-    message.reply_text(math.cos(int(args[0])))
-
-
-@run_async
-def sin(update: Update, context: CallbackContext):
-    args = context.args
-    message = update.effective_message
-    message.reply_text(math.sin(int(args[0])))
-
-
-@run_async
-def tan(update: Update, context: CallbackContext):
-    args = context.args
-    message = update.effective_message
-    message.reply_text(math.tan(int(args[0])))
-
-
-@run_async
-def arccos(update: Update, context: CallbackContext):
-    args = context.args
-    message = update.effective_message
-    message.reply_text(math.acos(int(args[0])))
-
-
-@run_async
-def arcsin(update: Update, context: CallbackContext):
-    args = context.args
-    message = update.effective_message
-    message.reply_text(math.asin(int(args[0])))
-
-
-@run_async
-def arctan(update: Update, context: CallbackContext):
-    args = context.args
-    message = update.effective_message
-    message.reply_text(math.atan(int(args[0])))
-
-
-@run_async
-def abs(update: Update, context: CallbackContext):
-    args = context.args
-    message = update.effective_message
-    message.reply_text(math.fabs(int(args[0])))
-
-
-@run_async
-def log(update: Update, context: CallbackContext):
-    args = context.args
-    message = update.effective_message
-    message.reply_text(math.log(int(args[0])))
-
+    command = message.text.split(None, 1)[0][1:].split("@")[0].lower()
+    parts = message.text.split(None, 1)
+    if len(parts) < 2:
+        message.reply_text(f"Give me something to calculate, eg: `/{command} x^2+2x`", parse_mode="markdown")
+        return
+    try:
+        result = SOLVERS[command](parts[1])
+        message.reply_text(_fmt(result))
+    except Exception:
+        message.reply_text("I couldn't solve that, check the format in /help.")
 
 
 __mod_name__ = "Math"
 
-SIMPLIFY_HANDLER = DisableAbleCommandHandler("math", simplify)
-FACTOR_HANDLER = DisableAbleCommandHandler("factor", factor)
-DERIVE_HANDLER = DisableAbleCommandHandler("derive", derive)
-INTEGRATE_HANDLER = DisableAbleCommandHandler("integrate", integrate)
-ZEROES_HANDLER = DisableAbleCommandHandler("zeroes", zeroes)
-TANGENT_HANDLER = DisableAbleCommandHandler("tangent", tangent)
-AREA_HANDLER = DisableAbleCommandHandler("area", area)
-COS_HANDLER = DisableAbleCommandHandler("cos", cos)
-SIN_HANDLER = DisableAbleCommandHandler("sin", sin)
-TAN_HANDLER = DisableAbleCommandHandler("tan", tan)
-ARCCOS_HANDLER = DisableAbleCommandHandler("arccos", arccos)
-ARCSIN_HANDLER = DisableAbleCommandHandler("arcsin", arcsin)
-ARCTAN_HANDLER = DisableAbleCommandHandler("arctan", arctan)
-ABS_HANDLER = DisableAbleCommandHandler("abs", abs)
-LOG_HANDLER = DisableAbleCommandHandler("log", log)
+MATH_HANDLERS = [
+    DisableAbleCommandHandler(cmd, solve, run_async=True) for cmd in SOLVERS
+]
+for handler in MATH_HANDLERS:
+    dispatcher.add_handler(handler)
 
-dispatcher.add_handler(SIMPLIFY_HANDLER)
-dispatcher.add_handler(FACTOR_HANDLER)
-dispatcher.add_handler(DERIVE_HANDLER)
-dispatcher.add_handler(INTEGRATE_HANDLER)
-dispatcher.add_handler(ZEROES_HANDLER)
-dispatcher.add_handler(TANGENT_HANDLER)
-dispatcher.add_handler(AREA_HANDLER)
-dispatcher.add_handler(COS_HANDLER)
-dispatcher.add_handler(SIN_HANDLER)
-dispatcher.add_handler(TAN_HANDLER)
-dispatcher.add_handler(ARCCOS_HANDLER)
-dispatcher.add_handler(ARCSIN_HANDLER)
-dispatcher.add_handler(ARCTAN_HANDLER)
-dispatcher.add_handler(ABS_HANDLER)
-dispatcher.add_handler(LOG_HANDLER)
+__command_list__ = list(SOLVERS)
+__handlers__ = MATH_HANDLERS

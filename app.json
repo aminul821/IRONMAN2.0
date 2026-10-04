@@ -1,196 +1,145 @@
 {
-      "name": "IRONMAN2.0",
-      "description": "Telegram group management bot.",
-      "keywords": [
-         "telegram",
-         "anime",
-         "group",
-         "manager",
-         "IRONMAN"
-      ],   
-   "repository": "https://github.com/aman706/IRONMAN2.0",
-   "addons": [
-      {
-         "options": {
-            "version": "12"
-         },
-         "plan": "heroku-postgresql"
-      }
-   ],
-   "env": {
-      "TOKEN": {
-         "description": "Your bot token. Get one from @BotFather duh",
-         "required": true,
-         "value": ""
-      },
-      "API_ID": {
-         "description": "Get API_ID from my.telegram.org, used for telethon based modules.",
-         "required": true,
-         "value": ""
-       },
-      "STRICT_GBAN": {
-      "description": "Enforce gbans across new groups as well as old groups. When a gbanned user talks, he will be banned.",
-      "value": "True"
-    
-       },
-      "API_HASH": {
-         "description": "Get API_HASH from my.telegram.org, used for telethon based modules.",
-         "required": true,
-         "value": ""
-      },    
-          "BOT_ID": {
-         "description": "Your bot ID.. Use any other bot to get it.",
-         "required": true,
-         "value": ""
-      },
-      "SQLALCHEMY_DATABASE_URI": {
-         "description": "Your postgres sql db, empty this field if you dont have one.",
-         "required": false,
-         "value": "sqldbtype://username:pw@hostname:port/db_name"
-      },      
-      "OWNER_ID": {
-         "description": "Your user ID as an integer.",
-         "required": true,
-         "value": ""
-      },
-      "HEROKU_API_KEY": {
-        "description": "Your Heroku API key, get it from 'https://dashboard.heroku.com/account'",
-        "value": ""
-      },
-      "HEROKU_APP_NAME": {
-        "description": "Enter the Heroku app name here (Must an exact same name with your input above).",
-        "required": false
-      },
-      "OWNER_USERNAME": {
-         "description": "Your username without the @",
-         "value": ""
-      },
-      "SUPPORT_CHAT": {
-         "description": "Your Telegram support group chat username where your users will go and bother you with shit But be like: MyGroupChatUsernameBlah. If this ever points to Ironman support than consider you made an enemy.",
-         "required": true,
-         "value": ""
-      },
-      "MONGO_DB_URI": {
-         "description": "Required for database connections.",
-         "required": false,
-         "value": ""
-      },
-      "EVENT_LOGS": {
-         "description": "Event logs channel to note down important bot level events, recommend to make this public. ex: '-123456'",
-         "required": true,
-         "value": "-123456798"
-      },
-      "JOIN_LOGGER": {
-         "description": "A channel where bot will print who added it to what group, useful during debugging or spam handling.",
-         "required": true,
-         "value": "-123456798"
-      },      
-      "CASH_API_KEY": {
-         "description": "Required for currency converter. Get yours from https://www.alphavantage.co/support/#api-key",
-         "required": true,
-         "value": "-xyz"
-      },
-      "TIME_API_KEY": {
-         "description": "Required for timezone information. Get yours from https://timezonedb.com/api",
-         "required": true,
-         "value": "-xyz"
-      },
-      "API_OPENWEATHER": {
-        "description": "Get your own APPID from https://api.openweathermap.org/data/2.5/weather",
-        "value": "",
-        "required": false
-      },
-      "DEV_USERS": {
-         "description": "ID of users who are Devs of your bot (can use /py etc.). If you are a noob and would come and bother Ironman support then keep the current ID's here at they are and add yours.",
-         "required": false,
-         "value": ""
-      },
-      "sw_api": {
-         "description": "Spamwatch API Token, Get one from @SpamWatchBot.",
-         "required": false,
-         "value": ""
-      }, 
-      "STRICT_GBAN": {
-         "description": "Enforce gbans across new groups as well as old groups. When a gbanned user talks, he will be banned.",
-         "value": "True"
-      },
-      "DRAGONS": {
-         "description": "A space separated list of user IDs who you want to assign as sudo users.",
-         "required": false,
-         "value": ""
-      },
-      "DEMONS": {
-         "description": "A space separated list of user IDs who you wanna assign as support users(gban perms only).",
-         "required": false,
-         "value": ""
-      },
-      "TIGERS": {
-         "description": "A space separated list of user IDs who you wanna assign as tiger users.",
-         "required": false,
-         "value": ""
-      },
-      "WOLVES": {
-         "description": "A space separated list of user IDs who you want to assign as whitelisted - can't be banned with your bot.",
-         "required": false,
-         "value": ""
-      },
-      "ENV": {
-         "description": "Setting this to ANYTHING will enable environment variables. Leave it as it is",
-         "value": "ANYTHING"
-      },
-      "WEBHOOK": {
-         "description": "Setting this to ANYTHING will enable webhooks. If you dont know how this works leave it as it is",
-         "required": false,
-         "value": ""
-      },
-      "PORT": {
-         "description": "Port to use for your webhooks. Better leave this as it is on heroku",
-         "required": false,
-         "value": ""
-      },
-      "URL": {
-         "description": "The Heroku App URL :-  https://<appname>.herokuapp.com/",
-         "required": false,
-         "value": ""
-      },
-      "No_LOAD": {
-         "description": "Dont load these modules cause they shit, space separation",
-         "required": false,
-         "value": "rss"
-      }, 
-      "BL_CHATS": {
-         "description": "List of chats you want blacklisted.",
-         "required": false,
-         "value": ""
-      },
-      "ALLOW_EXCL": {
-         "description": "Set this to True if you want ! to be a command prefix along with /. Recommended is True",
-         "value": "True"
-      },
-      "DONATION_LINK": {
-         "description": "Optional: link where you would like to receive donations. If you are a noob, better leave it linking to paul",
-         "required": false,
-         "value": "https://www.paypal.me/PaulSonOfLars"
-      },
-      "DEL_CMDS": {
-         "description": "Set this to True if you want to delete command messages from users who don't have the perms to run that command.",
-         "value": "True"
-      },
-      "AI_API_KEY": {
-      "description": "Make your bot talk using Intellivoid's chatbot API, get your key from https://coffeehouse.intellivoid.net/",
-         "required": false,
-         "value": ""
-   },      
-      "BAN_STICKER": {
-         "description": "ID of the sticker you want to use when banning people.",
-         "required": false,
-         "value": ""
-      },
-      "WALL_API": {
-         "description": "Required for wallpaper. Get your's from https://wall.alphacoders.com/",
-         "required": false,
-         "value": ""
-      }
-      
-   }
+  "name": "IRONMAN2.0",
+  "description": "Telegram group management bot.",
+  "keywords": [
+    "telegram",
+    "group",
+    "manager",
+    "IRONMAN"
+  ],
+  "repository": "https://github.com/aminul821/IRONMAN2.0",
+  "stack": "container",
+  "addons": [
+    {
+      "plan": "heroku-postgresql:essential-0"
+    }
+  ],
+  "env": {
+    "ENV": {
+      "description": "Leave this as it is: it makes the bot read its settings from these config vars.",
+      "value": "ANYTHING"
+    },
+    "TOKEN": {
+      "description": "Your bot token. Get one from @BotFather.",
+      "required": true
+    },
+    "API_ID": {
+      "description": "API_ID from my.telegram.org (used by the Telethon/Pyrogram modules).",
+      "required": true
+    },
+    "API_HASH": {
+      "description": "API_HASH from my.telegram.org.",
+      "required": true
+    },
+    "OWNER_ID": {
+      "description": "Your Telegram user id (a number). Send /id to @MissRose_bot to find it.",
+      "required": true
+    },
+    "OWNER_USERNAME": {
+      "description": "Your username without the @.",
+      "required": false
+    },
+    "SUPPORT_CHAT": {
+      "description": "Username of your support group, without the @. Leave empty if you have none.",
+      "required": false
+    },
+    "EVENT_LOGS": {
+      "description": "Id of a channel/group where the bot logs gbans, sudo changes and errors, eg -1001234567890. The bot must be admin there.",
+      "required": false
+    },
+    "JOIN_LOGGER": {
+      "description": "Id of a channel/group where the bot logs the groups it is added to.",
+      "required": false
+    },
+    "DEV_USERS": {
+      "description": "Space separated user ids with full owner-like access (shell, eval...). Only add people you trust completely.",
+      "required": false
+    },
+    "DRAGONS": {
+      "description": "Space separated user ids of sudo users.",
+      "required": false
+    },
+    "DEMONS": {
+      "description": "Space separated user ids of support users (can gban).",
+      "required": false
+    },
+    "TIGERS": {
+      "description": "Space separated user ids of tiger users (can't be banned or muted by the bot).",
+      "required": false
+    },
+    "WOLVES": {
+      "description": "Space separated user ids of whitelisted users.",
+      "required": false
+    },
+    "AI_API_KEY": {
+      "description": "Anthropic API key for the chatbot (/chatbot on). Get one at https://console.anthropic.com",
+      "required": false
+    },
+    "AI_MODEL": {
+      "description": "Claude model used by the chatbot.",
+      "value": "claude-opus-5-5",
+      "required": false
+    },
+    "OPENWEATHERMAP_ID": {
+      "description": "Optional OpenWeatherMap key for /weather. Without it wttr.in is used.",
+      "required": false
+    },
+    "CASH_API_KEY": {
+      "description": "Optional Alpha Vantage key for /cash. Without it free daily rates are used.",
+      "required": false
+    },
+    "GENIUS_API_TOKEN": {
+      "description": "Optional Genius token for better /lyrics results (https://genius.com/api-clients).",
+      "required": false
+    },
+    "SPAMWATCH_API": {
+      "description": "Optional SpamWatch API token, get one from @SpamWatchBot.",
+      "required": false
+    },
+    "HEROKU_API_KEY": {
+      "description": "Optional, for the /see var, /set var and /usage owner commands.",
+      "required": false
+    },
+    "HEROKU_APP_NAME": {
+      "description": "Optional, the name of this Heroku app (needed with HEROKU_API_KEY).",
+      "required": false
+    },
+    "STRICT_GBAN": {
+      "description": "Ban gbanned users in every group when they talk.",
+      "value": "True",
+      "required": false
+    },
+    "ALLOW_EXCL": {
+      "description": "Allow ! as a command prefix as well as /.",
+      "value": "True",
+      "required": false
+    },
+    "DEL_CMDS": {
+      "description": "Delete commands from users who don't have the rights to use them.",
+      "value": "True",
+      "required": false
+    },
+    "NO_LOAD": {
+      "description": "Space separated module names you don't want to load.",
+      "required": false
+    },
+    "BL_CHATS": {
+      "description": "Space separated chat ids the bot should leave.",
+      "required": false
+    },
+    "DONATION_LINK": {
+      "description": "Optional link where you receive donations.",
+      "required": false
+    },
+    "BAN_STICKER": {
+      "description": "Optional file id of a sticker sent before banning people.",
+      "required": false
+    }
+  },
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  }
 }

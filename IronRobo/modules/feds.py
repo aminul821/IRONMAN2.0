@@ -90,7 +90,7 @@ def new_fed(update: Update, context: CallbackContext):
             "Federations can only be created by privately messaging me."
         )
         return
-    if len(message.text) == 1:
+    if len(message.text.split(None, 1)) < 2:
         send_message(
             update.effective_message, "Please write the name of the federation!"
         )
@@ -120,14 +120,15 @@ def new_fed(update: Update, context: CallbackContext):
             "\n`/joinfed {}`".format(fed_name, fed_id, fed_id),
             parse_mode=ParseMode.MARKDOWN,
         )
-        try:
-            bot.send_message(
-                EVENT_LOGS,
-                "New Federation: <b>{}</b>\nID: <pre>{}</pre>".format(fed_name, fed_id),
-                parse_mode=ParseMode.HTML,
-            )
-        except:
-            LOGGER.warning("Cannot send a message to EVENT_LOGS")
+        if EVENT_LOGS:
+            try:
+                context.bot.send_message(
+                    EVENT_LOGS,
+                    "New Federation: <b>{}</b>\nID: <pre>{}</pre>".format(fed_name, fed_id),
+                    parse_mode=ParseMode.HTML,
+                )
+            except Exception:
+                LOGGER.warning("Cannot send a message to EVENT_LOGS")
     else:
         update.effective_message.reply_text(
             "Please write down the name of the federation"
@@ -351,6 +352,9 @@ def user_join_fed(update: Update, context: CallbackContext):
         return
 
     fed_id = sql.get_fed_id(chat.id)
+    if not fed_id:
+        send_message(update.effective_message, "This chat isn't part of any federation!")
+        return
 
     if is_user_fed_owner(fed_id, user.id) or user.id in DRAGONS:
         user_id = extract_user(msg, args)

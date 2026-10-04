@@ -1,5 +1,5 @@
 import importlib
-import collections
+import collections.abc
 
 from IronRobo import dispatcher, telethn
 from IronRobo.__main__ import (
@@ -22,6 +22,9 @@ from telegram.ext import CallbackContext, CommandHandler, run_async
 @dev_plus
 def load(update: Update, context: CallbackContext):
     message = update.effective_message
+    if len(message.text.split(" ", 1)) < 2:
+        message.reply_text("Give me a module name.")
+        return
     text = message.text.split(" ", 1)[1]
     load_messasge = message.reply_text(
         f"Attempting to load module : <b>{text}</b>", parse_mode=ParseMode.HTML
@@ -47,7 +50,7 @@ def load(update: Update, context: CallbackContext):
             if not isinstance(handler, tuple):
                 dispatcher.add_handler(handler)
             else:
-                if isinstance(handler[0], collections.Callable):
+                if isinstance(handler[0], collections.abc.Callable):
                     callback, telethon_event = handler
                     telethn.add_event_handler(callback, telethon_event)
                 else:
@@ -92,6 +95,9 @@ def load(update: Update, context: CallbackContext):
 @dev_plus
 def unload(update: Update, context: CallbackContext):
     message = update.effective_message
+    if len(message.text.split(" ", 1)) < 2:
+        message.reply_text("Give me a module name.")
+        return
     text = message.text.split(" ", 1)[1]
     unload_messasge = message.reply_text(
         f"Attempting to unload module : <b>{text}</b>", parse_mode=ParseMode.HTML
@@ -119,7 +125,7 @@ def unload(update: Update, context: CallbackContext):
             elif not isinstance(handler, tuple):
                 dispatcher.remove_handler(handler)
             else:
-                if isinstance(handler[0], collections.Callable):
+                if isinstance(handler[0], collections.abc.Callable):
                     callback, telethon_event = handler
                     telethn.remove_event_handler(callback, telethon_event)
                 else:

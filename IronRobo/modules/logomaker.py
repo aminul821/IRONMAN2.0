@@ -1,63 +1,61 @@
-
-from IronRobo.events import register
-from IronRobo import OWNER_ID
-from IronRobo import telethn as tbot
-import os 
-from PIL import Image, ImageDraw, ImageFont
-import shutil 
-import random, re
+import asyncio
 import glob
-import time
-from telethon.tl.types import InputMessagesFilterPhotos
+import os
+import random
+import tempfile
+
+from IronRobo import telethn as tbot
+from IronRobo.events import register
+from PIL import Image, ImageDraw, ImageFont
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BACKGROUNDS = os.path.join(ROOT, "resources", "extras", "*")
+FONTS = os.path.join(ROOT, "resources", "fonts", "*")
+
+
+def make_logo(text, path):
+    img = Image.open(random.choice(glob.glob(BACKGROUNDS))).convert("RGB")
+    draw = ImageDraw.Draw(img)
+    image_width, image_height = img.size
+    font_size = 140
+    font = ImageFont.truetype(random.choice(glob.glob(FONTS)), font_size)
+    # shrink long names so they fit on the picture
+    while font_size > 20:
+        left, top, right, bottom = draw.textbbox((0, 0), text, font=font, stroke_width=19)
+        if right - left <= image_width * 0.9:
+            break
+        font_size -= 10
+        font = ImageFont.truetype(font.path, font_size)
+    left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
+    w, h = right - left, bottom - top
+    h += int(h * 0.21)
+    x = (image_width - w) / 2
+    y = (image_height - h) / 1.5
+    draw.text((x, y), text, font=font, fill="white", stroke_width=19, stroke_fill="black")
+    img.save(path, "png")
+
 
 @register(pattern="^/logo ?(.*)")
 async def lego(event):
- quew = event.pattern_match.group(1)
- if event.sender_id == OWNER_ID:
-     pass
- else:
-    if not quew:
-       await event.reply("Provide some text to draw! Example: /logo <your name>")
-       return
-    else:
-       pass
- xnxx = await event.reply("Preparing Logo")
- try:
-    text = event.pattern_match.group(1)
-    ambilpoto = glob.glob("./resources/extras/*")
-    peler = random.choice(ambilpoto)
-    img = Image.open(peler)
-    draw = ImageDraw.Draw(img)
-    image_widthz, image_heightz = img.size
-    ambilfont = glob.glob("./resources/fonts/*")
-    rfont = random.choice(ambilfont)
-    font = ImageFont.truetype(rfont, 140)
-    w, h = draw.textsize(text, font=font)
-    h += int(h*0.21)
-    image_width, image_height = img.size
-    draw.text(((image_widthz-w)/2, (image_heightz-h)/1.5), text, font=font, fill=(255, 255,255))
-    x = (image_widthz-w)/2
-    y = ((image_heightz-h)/1.5)
-     
-    draw.text((x, y), text, font=font, fill="white", stroke_width=19, stroke_fill="black")
-    fname2 = "LogoByIronman.png"
-    img.save(fname2, "png")
-    await xnxx.edit("Uploading")
-    await tbot.send_file(event.chat_id, fname2, caption="╠𝑴𝒂𝒅𝒆 𝑩𝒚╣╠[𝐈𝐫𝐨𝐧𝐌𝐚𝐧🔥](https://t.me/Ironman_groupassit_bot)╣")
-    if os.path.exists(fname2):
-            os.remove(fname2)
-            await xnxx.delete()
- except Exception as e:
-   await event.reply(f"Error Report @THN_BOTS_SUPPORT, {e}")
+    text = event.pattern_match.group(1).strip()
+    if not text:
+        await event.reply("Provide some text to draw! Example: /logo <your name>")
+        return
+    xnxx = await event.reply("Preparing Logo")
+    path = os.path.join(tempfile.gettempdir(), f"logo_{event.chat_id}_{event.id}.png")
+    try:
+        await asyncio.get_running_loop().run_in_executor(None, make_logo, text, path)
+        await xnxx.edit("Uploading")
+        await tbot.send_file(event.chat_id, path, caption="Made by Ironman 🔥", reply_to=event.id)
+        await xnxx.delete()
+    except Exception as e:
+        await xnxx.edit(f"Couldn't make the logo: {e}")
+    finally:
+        if os.path.exists(path):
+            os.remove(path)
 
 
-file_help = os.path.basename(__file__)
-file_help = file_help.replace(".py", "")
-file_helpo = file_help.replace("_", "")
-
-
-_mod_name_ = "Logo"
-_help_ = """
-- /logo name: Create beautiful logo with your name
-- /rlogo : create unique logo
+__mod_name__ = "Logo"
+__help__ = """
+ • `/logo <name>`*:* Creates a logo with your name on a random background
 """

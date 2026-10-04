@@ -38,7 +38,7 @@ from telegram import (
     ParseMode,
     Update,
 )
-from telegram.error import BadRequest
+from telegram.error import BadRequest, TelegramError
 from telegram.ext import (
     CallbackContext,
     CallbackQueryHandler,
@@ -270,26 +270,22 @@ def new_member(update: Update, context: CallbackContext):
                          update.effective_message.reply_text(f"Groups are disabled for {bot.first_name}, I'm outta here.")
                     bot.leave_chat(update.effective_chat.id)
                     return
-                for x in bot.bot.get_chat_administrators(update.effective_chat.id):
-                    if x.status == "creator":
-                        creator = x.user
-                        break
-                if creator:
-                    bot.send_message(
-                        JOIN_LOGGER,
-                        "#NEW_GROUP\n<b>Group name:</b> {}\n<b>ID:</b> <code>{}</code>\n<b>Creator:</b> <code>{}</code>".format(
-                            html.escape(chat.title), chat.id, html.escape(creator)
-                        ),
-                        parse_mode=ParseMode.HTML,
+                if JOIN_LOGGER:
+                    with suppress(TelegramError):
+                        for x in bot.get_chat_administrators(update.effective_chat.id):
+                            if x.status == "creator":
+                                creator = x.user
+                                break
+                    text = "#NEW_GROUP\n<b>Group name:</b> {}\n<b>ID:</b> <code>{}</code>".format(
+                        html.escape(chat.title), chat.id
                     )
-                else:
-                    bot.send_message(
-                        JOIN_LOGGER,
-                        "#NEW_GROUP\n<b>Group name:</b> {}\n<b>ID:</b> <code>{}</code>".format(
-                            html.escape(chat.title), chat.id
-                        ),
-                        parse_mode=ParseMode.HTML,
-                    )
+                    if creator:
+                        text += "\n<b>Creator:</b> {} (<code>{}</code>)".format(
+                            mention_html(creator.id, html.escape(creator.first_name)),
+                            creator.id,
+                        )
+                    with suppress(TelegramError):
+                        bot.send_message(JOIN_LOGGER, text, parse_mode=ParseMode.HTML)
                 update.effective_message.reply_text(
                     "Watashi ga kita!", reply_to_message_id=reply
                 )

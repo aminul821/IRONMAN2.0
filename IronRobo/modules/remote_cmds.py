@@ -1,4 +1,4 @@
-from IronRobo import dispatcher
+from IronRobo import LOGGER, dispatcher
 from IronRobo.modules.helper_funcs.chat_status import (
     bot_admin,
     is_bot_admin,

@@ -1,18 +1,26 @@
-﻿from IronRobo import pbot as app
+import html
+
+from IronRobo import pbot as app
+from IronRobo.modules.sql_extended import karma_sql as sql
 from IronRobo.utils.errors import capture_err
-from IronRobo.utils.dbfunc import (
-    update_karma,
-    get_karma,
-    get_karmas,
-    int_to_alpha,
-    alpha_to_int,
-)
-from IronRobo.utils.filter_groups import karma_positive_group, karma_negative_group
+from IronRobo.utils.filter_groups import karma_negative_group, karma_positive_group
 from pyrogram import filters
 
-
-regex_upvote = r"^((?i)\+|\+\+|\+1|thx|tnx|ty|thank you|thanx|thanks|pro|cool|good|👍)$"
+regex_upvote = r"(?i)^(\+|\+\+|\+1|thx|tnx|ty|thank you|thanx|thanks|pro|cool|good|👍)$"
 regex_downvote = r"^(\-|\-\-|\-1|👎)$"
+
+
+async def _vote(message, amount):
+    reply = message.reply_to_message
+    if not reply.from_user or not message.from_user:
+        return
+    if reply.from_user.id == message.from_user.id or reply.from_user.is_bot:
+        return
+    karma = sql.change_karma(message.chat.id, reply.from_user.id, amount)
+    action = "Incremented" if amount > 0 else "Decremented"
+    await message.reply_text(
+        f"{action} Karma of {reply.from_user.mention} By 1 \nTotal Points: {karma}"
+    )
 
 
 @app.on_message(
@@ -28,24 +36,7 @@ regex_downvote = r"^(\-|\-\-|\-1|👎)$"
 )
 @capture_err
 async def upvote(_, message):
-    if message.reply_to_message.from_user.id == message.from_user.id:
-        return
-    chat_id = message.chat.id
-    user_id = message.reply_to_message.from_user.id
-    user_mention = message.reply_to_message.from_user.mention
-    current_karma = await get_karma(chat_id, await int_to_alpha(user_id))
-    if current_karma:
-        current_karma = current_karma["karma"]
-        karma = current_karma + 1
-        new_karma = {"karma": karma}
-        await update_karma(chat_id, await int_to_alpha(user_id), new_karma)
-    else:
-        karma = 1
-        new_karma = {"karma": karma}
-        await update_karma(chat_id, await int_to_alpha(user_id), new_karma)
-    await message.reply_text(
-        f"Incremented Karma of {user_mention} By 1 \nTotal Points: {karma}"
-    )
+    await _vote(message, 1)
 
 
 @app.on_message(
@@ -61,24 +52,7 @@ async def upvote(_, message):
 )
 @capture_err
 async def downvote(_, message):
-    if message.reply_to_message.from_user.id == message.from_user.id:
-        return
-    chat_id = message.chat.id
-    user_id = message.reply_to_message.from_user.id
-    user_mention = message.reply_to_message.from_user.mention
-    current_karma = await get_karma(chat_id, await int_to_alpha(user_id))
-    if current_karma:
-        current_karma = current_karma["karma"]
-        karma = current_karma - 1
-        new_karma = {"karma": karma}
-        await update_karma(chat_id, await int_to_alpha(user_id), new_karma)
-    else:
-        karma = 1
-        new_karma = {"karma": karma}
-        await update_karma(chat_id, await int_to_alpha(user_id), new_karma)
-    await message.reply_text(
-        f"Decremented Karma Of {user_mention} By 1 \nTotal Points: {karma}"
-    )
+    await _vote(message, -1)
 
 
 @app.on_message(filters.command("karma") & filters.group)
@@ -86,34 +60,40 @@ async def downvote(_, message):
 async def karma(_, message):
     chat_id = message.chat.id
 
-    if not message.reply_to_message:
-        karma = await get_karmas(chat_id)
-        msg = f"**Karma list of {message.chat.title}:- **\n"
-        limit = 0
-        karma_dicc = {}
-        for i in karma:
-            user_id = await alpha_to_int(i)
-            user_karma = karma[i]["karma"]
-            karma_dicc[str(user_id)] = user_karma
-            karma_arranged = dict(
-                sorted(karma_dicc.items(), key=lambda item: item[1], reverse=True)
-            )
-        for user_idd, karma_count in karma_arranged.items():
-            if limit > 9:
-                break
-            try:
-                user_name = (await app.get_users(int(user_idd))).username
-            except Exception:
-                continue
-            msg += f"{user_name} : `{karma_count}`\n"
-            limit += 1
-        await message.reply_text(msg)
-    else:
-        user_id = message.reply_to_message.from_user.id
-        karma = await get_karma(chat_id, await int_to_alpha(user_id))
-        if karma:
-            karma = karma["karma"]
-            await message.reply_text(f"**Total Points**: __{karma}__")
-        else:
-            karma = 0
-            await message.reply_text(f"**Total Points**: __{karma}__")
+    if message.reply_to_message and message.reply_to_message.from_user:
+        points = sql.get_karma(chat_id, message.reply_to_message.from_user.id)
+        await message.reply_text(f"**Total Points**: __{points}__")
+        return
+
+    top = sql.top_karma(chat_id, 10)
+    if not top:
+        await message.reply_text("Nobody has any karma in this chat yet.")
+        return
+    msg = f"<b>Karma list of {html.escape(message.chat.title or 'this chat')}:</b>\n"
+    for user_id, points in top:
+        try:
+            user = await app.get_users(user_id)
+            name = html.escape(user.first_name or str(user_id))
+        except Exception:
+            name = str(user_id)
+        msg += f"{name} : <code>{points}</code>\n"
+    await message.reply_text(msg, parse_mode="html")
+
+
+def __stats__():
+    chats, total = sql.karma_stats()
+    return f"• {total} karma points, across {chats} chats."
+
+
+def __migrate__(old_chat_id, new_chat_id):
+    sql.migrate_chat(old_chat_id, new_chat_id)
+
+
+__help__ = """
+*Karma:*
+Reply to someone with `+`, `+1`, `thanks`, `👍` ... to give them karma, or with `-`, `-1`, `👎` to take one away.
+
+ • `/karma`*:* Shows the top karma holders of the chat
+ • `/karma`*:* (as a reply) Shows the karma of that user
+"""
+__mod_name__ = "Karma"

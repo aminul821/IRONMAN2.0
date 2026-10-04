@@ -263,6 +263,9 @@ def save(update: Update, context: CallbackContext):
 
     note_name, text, data_type, content, buttons = get_note_type(msg)
     note_name = note_name.lower()
+    if not note_name:
+        msg.reply_text("Usage: `/save <notename> <text>` (or reply to a message)", parse_mode="markdown")
+        return
     if data_type is None:
         msg.reply_text("Dude, there's no note")
         return

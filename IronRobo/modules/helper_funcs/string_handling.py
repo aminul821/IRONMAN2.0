@@ -4,7 +4,6 @@ from typing import Dict, List
 
 import bleach
 import markdown2
-import emoji
 
 from telegram import MessageEntity
 from telegram.utils.helpers import escape_markdown
@@ -48,13 +47,10 @@ def _selective_escape(to_parse: str) -> str:
 
 # This is a fun one.
 def _calc_emoji_offset(to_calc) -> int:
-    # Get all emoji in text.
-    emoticons = emoji.get_emoji_regexp().finditer(to_calc)
-    # Check the utf16 length of the emoji to determine the offset it caused.
-    # Normal, 1 character emoji don't affect; hence sub 1.
-    # special, eg with two emoji characters (eg face, and skin col) will have length 2, so by subbing one we
-    # know we'll get one extra offset,
-    return sum(len(e.group(0).encode("utf-16-le")) // 2 - 1 for e in emoticons)
+    # Telegram counts entity offsets in UTF-16 code units. Characters outside the
+    # BMP (most emoji) take two code units but are a single python character, so
+    # each of them shifts the offset by one.
+    return sum(len(c.encode("utf-16-le")) // 2 - 1 for c in to_calc)
 
 
 def markdown_parser(
@@ -285,5 +281,7 @@ def markdown_to_html(text):
     text = text.replace("~", "~~")
     _html = markdown2.markdown(text, extras=["strike", "underline"])
     return bleach.clean(
-        _html, tags=["strong", "em", "a", "code", "pre", "strike", "u"], strip=True
+        _html,
+        tags=["strong", "em", "a", "code", "pre", "strike", "s", "del", "u", "ins"],
+        strip=True,
     )[:-1]

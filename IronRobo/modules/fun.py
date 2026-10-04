@@ -160,6 +160,10 @@ def roll(update: Update, context: CallbackContext):
 def shout(update: Update, context: CallbackContext):
     args = context.args
     text = " ".join(args)
+    if not text:
+        update.effective_message.reply_text("What should I shout?")
+        return
+    text = text[:40].replace("`", "")
     result = []
     result.append(" ".join(list(text)))
     for pos, symbol in enumerate(text[1:]):

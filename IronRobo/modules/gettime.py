@@ -1,61 +1,56 @@
 import datetime
+import html
 from typing import List
 
-import requests
-from IronRobo import TIME_API_KEY, dispatcher
+import pytz
+from IronRobo import dispatcher
 from IronRobo.modules.disable import DisableAbleCommandHandler
 from telegram import ParseMode, Update
 from telegram.ext import CallbackContext, run_async
 
+# Built from the tz database that ships with pytz, so no API key is needed.
+ZONES = []
+for _code, _zones in pytz.country_timezones.items():
+    for _zone in _zones:
+        ZONES.append(
+            {
+                "countryCode": _code,
+                "countryName": pytz.country_names.get(_code, _code),
+                "zoneName": _zone,
+            }
+        )
+
 
 def generate_time(to_find: str, findtype: List[str]) -> str:
-    data = requests.get(
-        f"https://api.timezonedb.com/v2.1/list-time-zone"
-        f"?key={TIME_API_KEY}"
-        f"&format=json"
-        f"&fields=countryCode,countryName,zoneName,gmtOffset,timestamp,dst"
-    ).json()
-
-    for zone in data["zones"]:
+    match = None
+    for zone in ZONES:
         for eachtype in findtype:
-            if to_find in zone[eachtype].lower():
-                country_name = zone["countryName"]
-                country_zone = zone["zoneName"]
-                country_code = zone["countryCode"]
-
-                if zone["dst"] == 1:
-                    daylight_saving = "Yes"
-                else:
-                    daylight_saving = "No"
-
-                date_fmt = r"%d-%m-%Y"
-                time_fmt = r"%H:%M:%S"
-                day_fmt = r"%A"
-                gmt_offset = zone["gmtOffset"]
-                timestamp = datetime.datetime.now(
-                    datetime.timezone.utc
-                ) + datetime.timedelta(seconds=gmt_offset)
-                current_date = timestamp.strftime(date_fmt)
-                current_time = timestamp.strftime(time_fmt)
-                current_day = timestamp.strftime(day_fmt)
-
+            value = zone[eachtype].lower()
+            if (eachtype == "countryCode" and value == to_find) or (
+                eachtype != "countryCode" and to_find in value
+            ):
+                match = zone
                 break
+        if match:
+            break
+    if not match:
+        return None
 
-    try:
-        result = (
-            f"<b>Country:</b> <code>{country_name}</code>\n"
-            f"<b>Zone Name:</b> <code>{country_zone}</code>\n"
-            f"<b>Country Code:</b> <code>{country_code}</code>\n"
-            f"<b>Daylight saving:</b> <code>{daylight_saving}</code>\n"
-            f"<b>Day:</b> <code>{current_day}</code>\n"
-            f"<b>Current Time:</b> <code>{current_time}</code>\n"
-            f"<b>Current Date:</b> <code>{current_date}</code>\n"
-            '<b>Timezones:</b> <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">List here</a>'
-        )
-    except:
-        result = None
-
-    return result
+    tz = pytz.timezone(match["zoneName"])
+    timestamp = datetime.datetime.now(tz)
+    daylight_saving = "Yes" if timestamp.dst() else "No"
+    offset = timestamp.strftime("%z")
+    return (
+        f"<b>Country:</b> <code>{html.escape(match['countryName'])}</code>\n"
+        f"<b>Zone Name:</b> <code>{match['zoneName']}</code>\n"
+        f"<b>Country Code:</b> <code>{match['countryCode']}</code>\n"
+        f"<b>UTC Offset:</b> <code>{offset[:3]}:{offset[3:]}</code>\n"
+        f"<b>Daylight saving:</b> <code>{daylight_saving}</code>\n"
+        f"<b>Day:</b> <code>{timestamp.strftime('%A')}</code>\n"
+        f"<b>Current Time:</b> <code>{timestamp.strftime('%H:%M:%S')}</code>\n"
+        f"<b>Current Date:</b> <code>{timestamp.strftime('%d-%m-%Y')}</code>\n"
+        '<b>Timezones:</b> <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">List here</a>'
+    )
 
 
 @run_async
@@ -68,7 +63,7 @@ def gettime(update: Update, context: CallbackContext):
         message.reply_text("Provide a country name/abbreviation/timezone to find.")
         return
     send_message = message.reply_text(
-        f"Finding timezone info for <b>{query}</b>", parse_mode=ParseMode.HTML
+        f"Finding timezone info for <b>{html.escape(query)}</b>", parse_mode=ParseMode.HTML
     )
 
     query_timezone = query.lower()
@@ -79,7 +74,7 @@ def gettime(update: Update, context: CallbackContext):
 
     if not result:
         send_message.edit_text(
-            f"Timezone info not available for <b>{query}</b>\n"
+            f"Timezone info not available for <b>{html.escape(query)}</b>\n"
             '<b>All Timezones:</b> <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">List here</a>',
             parse_mode=ParseMode.HTML,
             disable_web_page_preview=True,

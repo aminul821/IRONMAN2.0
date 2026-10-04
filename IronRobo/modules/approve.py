@@ -13,9 +13,9 @@ from IronRobo.modules.helper_funcs.extraction import extract_user
 from IronRobo.modules.log_channel import loggable
 
 
+@run_async
 @loggable
 @user_admin
-@run_async
 def approve(update, context):
     message = update.effective_message
     chat_title = message.chat.title
@@ -58,9 +58,9 @@ def approve(update, context):
     return log_message
 
 
+@run_async
 @loggable
 @user_admin
-@run_async
 def disapprove(update, context):
     message = update.effective_message
     chat_title = message.chat.title
@@ -122,12 +122,12 @@ def approval(update, context):
     chat = update.effective_chat
     args = context.args
     user_id = extract_user(message, args)
-    member = chat.get_member(int(user_id))
     if not user_id:
         message.reply_text(
             "I don't know who you're talking about, you're going to need to specify a user!"
         )
         return ""
+    member = chat.get_member(int(user_id))
     if sql.is_approved(message.chat_id, user_id):
         message.reply_text(
             f"{member.user['first_name']} is an approved user. Locks, antiflood, and blocklists won't apply to them."

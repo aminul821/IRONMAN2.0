@@ -122,7 +122,7 @@ def add_blackliststicker(update: Update, context: CallbackContext):
                 ),
                 parse_mode=ParseMode.HTML,
             )
-    elif msg.reply_to_message:
+    elif msg.reply_to_message and msg.reply_to_message.sticker:
         added = 0
         trigger = msg.reply_to_message.sticker.set_name
         if trigger is None:
@@ -226,7 +226,7 @@ def unblackliststicker(update: Update, context: CallbackContext):
                 ),
                 parse_mode=ParseMode.HTML,
             )
-    elif msg.reply_to_message:
+    elif msg.reply_to_message and msg.reply_to_message.sticker:
         trigger = msg.reply_to_message.sticker.set_name
         if trigger is None:
             send_message(update.effective_message, "Sticker is invalid!")

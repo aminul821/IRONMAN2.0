@@ -1,17 +1,19 @@
-import sys
 import traceback
 from functools import wraps
+
+from IronRobo import EVENT_LOGS, LOGGER, OWNER_ID
 from IronRobo import pbot as app
 from pyrogram.errors.exceptions.forbidden_403 import ChatWriteForbidden
 
-LOG_GROUP_ID = int(-1001196083551)
+LOG_GROUP_ID = EVENT_LOGS or OWNER_ID
+
 
 def split_limits(text):
     if len(text) < 2048:
         return [text]
 
     lines = text.splitlines(True)
-    small_msg = ''
+    small_msg = ""
     result = []
     for line in lines:
         if len(small_msg) + len(line) < 2048:
@@ -34,22 +36,21 @@ def capture_err(func):
             await app.leave_chat(message.chat.id)
             return
         except Exception as err:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            errors = traceback.format_exception(
-                etype=exc_type, value=exc_obj, tb=exc_tb,
-            )
+            errors = traceback.format_exception(type(err), err, err.__traceback__)
             error_feedback = split_limits(
-                '**ERROR** | `{}` | `{}`\n\n```{}```\n\n```{}```\n'.format(
+                "**ERROR** | `{}` | `{}`\n\n```{}```\n\n```{}```\n".format(
                     0 if not message.from_user else message.from_user.id,
                     0 if not message.chat else message.chat.id,
                     message.text or message.caption,
-                    ''.join(errors),
+                    "".join(errors),
                 ),
             )
             for x in error_feedback:
-                await app.send_message(
-                    LOG_GROUP_ID,
-                    x
-                )
+                try:
+                    await app.send_message(LOG_GROUP_ID, x)
+                except Exception:
+                    LOGGER.exception("Could not send error report")
+                    break
             raise err
+
     return capture

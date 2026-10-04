@@ -1,3 +1,4 @@
+import html
 import importlib
 
 import time
@@ -30,14 +31,7 @@ from IronRobo.modules import ALL_MODULES
 from IronRobo.modules.helper_funcs.chat_status import is_user_admin
 from IronRobo.modules.helper_funcs.misc import paginate_modules
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Update
-from telegram.error import (
-    BadRequest,
-    ChatMigrated,
-    NetworkError,
-    TelegramError,
-    TimedOut,
-    Unauthorized,
-)
+from telegram.error import BadRequest, Unauthorized
 from telegram.ext import (
     CallbackContext,
     CallbackQueryHandler,
@@ -80,28 +74,29 @@ PM_START_TEXT = """
 
 """
 
-buttons = [
-    [
-        InlineKeyboardButton(
-            text="➕️ ADD  Ironman TO YOUR GROUP ➕️", url="t.me/ironman_groupassit_bot?startgroup=true"),
-    ],
-    [
-        InlineKeyboardButton(text="ℹ️ ABOUT", callback_data="ironman_"),
-        InlineKeyboardButton(text="📚 COMMANDS", callback_data="help_back"),
-    ],
-    [
-        InlineKeyboardButton(text="🔥 DEVS", url="t.me/ironmandevs"),
-        InlineKeyboardButton(text="🔥 OWNER", url="t.me/theprofessor_isback"),
-    ],
-    
-    [
-        InlineKeyboardButton(
-            text="💾 SOURCE", url="t.me/theprofessor_isback"),
-        InlineKeyboardButton(
-            text="👥 SUPPORT", url="https://t.me/THN_BOTS_SUPPORT"
-        ),
-    ],
-]
+def start_buttons():
+    bot_username = dispatcher.bot.username
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="➕️ ADD  Ironman TO YOUR GROUP ➕️",
+                url=f"https://t.me/{bot_username}?startgroup=true",
+            ),
+        ],
+        [
+            InlineKeyboardButton(text="ℹ️ ABOUT", callback_data="ironman_"),
+            InlineKeyboardButton(text="📚 COMMANDS", callback_data="help_back"),
+        ],
+    ]
+    if SUPPORT_CHAT:
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text="👥 SUPPORT", url=f"https://t.me/{SUPPORT_CHAT}"
+                ),
+            ]
+        )
+    return keyboard
 
 
 HELP_STRINGS = """
@@ -163,17 +158,49 @@ for module_name in ALL_MODULES:
         USER_SETTINGS[imported_module.__mod_name__.lower()] = imported_module
 
 
+HTML_TAGS = re.compile(r"</?(b|i|u|s|code|pre|a)( [^>]*)?>")
+
+
+def module_help_text(module, header="Here is the help for the {} module:"):
+    """Return (text, parse_mode) for a module's help.
+
+    Module help strings are written either in HTML or in Markdown, so pick the
+    parse mode the text was written for.
+    """
+    help_text = module.__help__
+    if HTML_TAGS.search(help_text):
+        title = "<b>{}</b>".format(html.escape(module.__mod_name__))
+        return header.format(title) + "\n" + help_text, ParseMode.HTML
+    title = "*{}*".format(escape_markdown(module.__mod_name__))
+    return header.format(title) + "\n" + help_text, ParseMode.MARKDOWN
+
+
+def _strip_markup(text):
+    return HTML_TAGS.sub("", text)
+
+
 # do not async
-def send_help(chat_id, text, keyboard=None):
+def send_help(chat_id, text, keyboard=None, parse_mode=ParseMode.MARKDOWN):
     if not keyboard:
         keyboard = InlineKeyboardMarkup(paginate_modules(0, HELPABLE, "help"))
-    dispatcher.bot.send_message(
-        chat_id=chat_id,
-        text=text,
-        parse_mode=ParseMode.MARKDOWN,
-        disable_web_page_preview=True,
-        reply_markup=keyboard,
-    )
+    try:
+        dispatcher.bot.send_message(
+            chat_id=chat_id,
+            text=text,
+            parse_mode=parse_mode,
+            disable_web_page_preview=True,
+            reply_markup=keyboard,
+        )
+    except BadRequest as excp:
+        if "parse entities" not in excp.message.lower():
+            raise
+        # Broken formatting in a help string should not hide the help.
+        dispatcher.bot.send_message(
+            chat_id=chat_id,
+            text=_strip_markup(text),
+            disable_web_page_preview=True,
+            reply_markup=keyboard,
+        )
 
 
 @run_async
@@ -196,12 +223,14 @@ def start(update: Update, context: CallbackContext):
                 mod = args[0].lower().split("_", 1)[1]
                 if not HELPABLE.get(mod, False):
                     return
+                text, parse_mode = module_help_text(HELPABLE[mod])
                 send_help(
                     update.effective_chat.id,
-                    HELPABLE[mod].__help__,
+                    text,
                     InlineKeyboardMarkup(
                         [[InlineKeyboardButton(text="⬅️ BACK", callback_data="help_back")]]
                     ),
+                    parse_mode=parse_mode,
                 )
 
             elif args[0].lower().startswith("stngs_"):
@@ -218,12 +247,12 @@ def start(update: Update, context: CallbackContext):
 
         else:
             update.effective_message.reply_text(
-                PM_START_TEXT, reply_markup=InlineKeyboardMarkup(buttons), parse_mode=ParseMode.MARKDOWN, timeout=60)
+                PM_START_TEXT,
+                reply_markup=InlineKeyboardMarkup(start_buttons()),
+                parse_mode=ParseMode.MARKDOWN,
+                timeout=60,
+            )
 
-            
-                
-                
-                
     else:
         update.effective_message.reply_text(
             "I'm awake already Master🚀!\n<b>Haven't slept since🙄:</b> <code>{}</code>".format(
@@ -231,64 +260,6 @@ def start(update: Update, context: CallbackContext):
             ),
             parse_mode=ParseMode.HTML,
         )
-
-
-def error_handler(update, context):
-    """Log the error and send a telegram message to notify the developer."""
-    # Log the error before we do anything else, so we can see it even if something breaks.
-    LOGGER.error(msg="Exception while handling an update:", exc_info=context.error)
-
-    # traceback.format_exception returns the usual python message about an exception, but as a
-    # list of strings rather than a single string, so we have to join them together.
-    tb_list = traceback.format_exception(
-        None, context.error, context.error.__traceback__
-    )
-    tb = "".join(tb_list)
-
-    # Build the message with some markup and additional information about what happened.
-    message = (
-        "An exception was raised while handling an update\n"
-        "<pre>update = {}</pre>\n\n"
-        "<pre>{}</pre>"
-    ).format(
-        html.escape(json.dumps(update.to_dict(), indent=2, ensure_ascii=False)),
-        html.escape(tb),
-    )
-
-    if len(message) >= 4096:
-        message = message[:4096]
-    # Finally, send the message
-    context.bot.send_message(chat_id=OWNER_ID, text=message, parse_mode=ParseMode.HTML)
-
-
-# for test purposes
-def error_callback(update: Update, context: CallbackContext):
-    error = context.error
-    try:
-        raise error
-    except Unauthorized:
-        print("no nono1")
-        print(error)
-        # remove update.message.chat_id from conversation list
-    except BadRequest:
-        print("no nono2")
-        print("BadRequest caught")
-        print(error)
-
-        # handle malformed requests - read more below!
-    except TimedOut:
-        print("no nono3")
-        # handle slow connection problems
-    except NetworkError:
-        print("no nono4")
-        # handle other connection problems
-    except ChatMigrated as err:
-        print("no nono5")
-        print(err)
-        # the chat_id of a group has changed, use e.new_chat_id instead
-    except TelegramError:
-        print(error)
-        # handle all other telegram related errors
 
 
 @run_async
@@ -299,25 +270,28 @@ def help_button(update, context):
     next_match = re.match(r"help_next\((.+?)\)", query.data)
     back_match = re.match(r"help_back", query.data)
 
-    print(query.message.chat.id)
-
     try:
         if mod_match:
             module = mod_match.group(1)
-            text = (
-                "Here is the help for the *{}* module:\n".format(
-                    HELPABLE[module].__mod_name__
+            text, parse_mode = module_help_text(HELPABLE[module])
+            back = InlineKeyboardMarkup(
+                [[InlineKeyboardButton(text="Back", callback_data="help_back")]]
+            )
+            try:
+                query.message.edit_text(
+                    text=text,
+                    parse_mode=parse_mode,
+                    disable_web_page_preview=True,
+                    reply_markup=back,
                 )
-                + HELPABLE[module].__help__
-            )
-            query.message.edit_text(
-                text=text,
-                parse_mode=ParseMode.MARKDOWN,
-                disable_web_page_preview=True,
-                reply_markup=InlineKeyboardMarkup(
-                    [[InlineKeyboardButton(text="Back", callback_data="help_back")]]
-                ),
-            )
+            except BadRequest as excp:
+                if "parse entities" not in excp.message.lower():
+                    raise
+                query.message.edit_text(
+                    text=_strip_markup(text),
+                    disable_web_page_preview=True,
+                    reply_markup=back,
+                )
 
         elif prev_match:
             curr_page = int(prev_match.group(1))
@@ -352,8 +326,9 @@ def help_button(update, context):
         context.bot.answer_callback_query(query.id)
         # query.message.delete()
 
-    except BadRequest:
-        pass
+    except BadRequest as excp:
+        if excp.message not in ["Message is not modified", "Query_id_invalid"]:
+            LOGGER.warning("Error in help buttons: %s", excp.message)
 
 
 @run_async
@@ -369,8 +344,7 @@ def ironman_about_callback(update, context):
                  \n❍ I have a note keeping system, blacklists, and even predetermined replies on certain keywords.
                  \n❍ I check for admins' permissions before executing any command and more stuffs
                  \n\n_ironman's licensed under the GNU General Public License v3.0_
-                 \nHere is the [💾Repository](t.me/theprofessor_isback).
-                 \n\nIf you have any question about IRONMAN, let us know at @THN\_BOTS\_SUPPORT""",
+                 \nHere is the [💾Repository](https://github.com/aminul821/IRONMAN2.0).""",
             parse_mode=ParseMode.MARKDOWN,
             disable_web_page_preview=True,
             reply_markup=InlineKeyboardMarkup(
@@ -384,7 +358,7 @@ def ironman_about_callback(update, context):
     elif query.data == "ironman_back":
         query.message.edit_text(
                 PM_START_TEXT,
-                reply_markup=InlineKeyboardMarkup(buttons),
+                reply_markup=InlineKeyboardMarkup(start_buttons()),
                 parse_mode=ParseMode.MARKDOWN,
                 timeout=60,
                 disable_web_page_preview=False,
@@ -397,7 +371,7 @@ def Source_about_callback(update, context):
     if query.data == "source_":
         query.message.edit_text(
             text=""" Hi..🤗 I'm *Ironman*
-                 \nHere is the [Source Code](t.me/theprofessor_isback) .""",
+                 \nHere is the [Source Code](https://github.com/aminul821/IRONMAN2.0) .""",
             parse_mode=ParseMode.MARKDOWN,
             disable_web_page_preview=True,
             reply_markup=InlineKeyboardMarkup(
@@ -411,7 +385,7 @@ def Source_about_callback(update, context):
     elif query.data == "source_back":
         query.message.edit_text(
                 PM_START_TEXT,
-                reply_markup=InlineKeyboardMarkup(buttons),
+                reply_markup=InlineKeyboardMarkup(start_buttons()),
                 parse_mode=ParseMode.MARKDOWN,
                 timeout=60,
                 disable_web_page_preview=False,
@@ -459,11 +433,8 @@ def get_help(update: Update, context: CallbackContext):
 
     elif len(args) >= 2 and any(args[1].lower() == x for x in HELPABLE):
         module = args[1].lower()
-        text = (
-            "Here is the available help for the *{}* module:\n".format(
-                HELPABLE[module].__mod_name__
-            )
-            + HELPABLE[module].__help__
+        text, parse_mode = module_help_text(
+            HELPABLE[module], "Here is the available help for the {} module:"
         )
         send_help(
             chat.id,
@@ -471,6 +442,7 @@ def get_help(update: Update, context: CallbackContext):
             InlineKeyboardMarkup(
                 [[InlineKeyboardButton(text="Back", callback_data="help_back")]]
             ),
+            parse_mode=parse_mode,
         )
 
     else:
@@ -628,7 +600,21 @@ def get_settings(update: Update, context: CallbackContext):
                 ),
             )
         else:
-            text = "Click here to check your settings."
+            msg.reply_text(
+                "Click here to check your settings.",
+                reply_markup=InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                text="Settings",
+                                url="t.me/{}?start=stngs_{}".format(
+                                    context.bot.username, chat.id
+                                ),
+                            )
+                        ]
+                    ]
+                ),
+            )
 
     else:
         send_settings(chat.id, user.id, True)
@@ -726,8 +712,6 @@ def main():
     dispatcher.add_handler(migrate_handler)
     dispatcher.add_handler(donate_handler)
 
-    dispatcher.add_error_handler(error_callback)
-
     if WEBHOOK:
         LOGGER.info("Using webhooks.")
         updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN)
@@ -739,7 +723,7 @@ def main():
 
     else:
         LOGGER.info("Using long polling.")
-        updater.start_polling(timeout=15, read_latency=4, clean=True)
+        updater.start_polling(timeout=15, read_latency=4, drop_pending_updates=True)
 
     if len(argv) not in (1, 3, 4):
         telethn.disconnect()

@@ -17,7 +17,6 @@ def debug(update: Update, context: CallbackContext):
     global DEBUG_MODE
     args = update.effective_message.text.split(None, 1)
     message = update.effective_message
-    print(DEBUG_MODE)
     if len(args) > 1:
         if args[1] in ("yes", "on"):
             DEBUG_MODE = True
@@ -36,16 +35,16 @@ def debug(update: Update, context: CallbackContext):
 async def i_do_nothing_yes(event):
     global DEBUG_MODE
     if DEBUG_MODE:
-        print(f"-{event.from_id} ({event.chat_id}) : {event.text}")
+        print(f"-{event.sender_id} ({event.chat_id}) : {event.text}")
         if os.path.exists("updates.txt"):
             with open("updates.txt", "r") as f:
                 text = f.read()
             with open("updates.txt", "w+") as f:
-                f.write(text + f"\n-{event.from_id} ({event.chat_id}) : {event.text}")
+                f.write(text + f"\n-{event.sender_id} ({event.chat_id}) : {event.text}")
         else:
             with open("updates.txt", "w+") as f:
                 f.write(
-                    f"- {event.from_id} ({event.chat_id}) : {event.text} | {datetime.datetime.now()}"
+                    f"- {event.sender_id} ({event.chat_id}) : {event.text} | {datetime.datetime.now()}"
                 )
 
 

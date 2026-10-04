@@ -12,6 +12,7 @@ from pyrogram import Client
 from pyrogram.errors import FloodWait, MessageNotModified
 from pyrogram.types import Chat, Message, User
 
+from IronRobo.utils.errors import split_limits
 from IronRobo  import OWNER_ID, SUPPORT_CHAT
 from IronRobo import pbot
 
@@ -290,6 +291,8 @@ async def get_administrators(chat: Chat) -> List[User]:
 
 def admins_only(func: Callable) -> Coroutine:
     async def wrapper(client: Client, message: Message):
+        if not message.from_user:
+            return
         if message.from_user.id == OWNER_ID:
             return await func(client, message)
         admins = await get_administrators(message.chat)

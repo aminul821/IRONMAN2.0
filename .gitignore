@@ -1,0 +1,11 @@
+IronRobo/config.py
+IronRobo/elevated_users.json
+*.session
+*.session-journal
+log.txt
+updates.txt
+__pycache__/
+*.pyc
+.env
+env/
+venv/

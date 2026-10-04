@@ -5,7 +5,9 @@ from telethon import functions
 from telethon import types
 from IronRobo.events import register
 from IronRobo import telethn as tbot
-import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 async def is_register_admin(chat, user):
@@ -55,7 +57,7 @@ openhehe = ChatBannedRights(
     change_info=True,
 )
 
-@register(pattern="^/addnt")
+@register(pattern="^/addnt$")
 async def close_ws(event):
     if event.is_group:
      if not (await is_register_admin(event.input_chat, event.message.sender_id)):
@@ -71,7 +73,7 @@ async def close_ws(event):
     add_nightmode(str(event.chat_id))
     await event.reply(f"Added Chat {event.chat.title} With Id {event.chat_id} To Database. **This Group Will Be Closed On 12Am(IST) And Will Opened On 06Am(IST)**")
 
-@register(pattern="^/rmnt")
+@register(pattern="^/rmnt$")
 async def disable_ws(event):
     if event.is_group:
      if not (await is_register_admin(event.input_chat, event.message.sender_id)):
@@ -105,10 +107,6 @@ async def job_close():
         except Exception as e:
             logger.info(f"Unable To Close Group {warner} - {e}")
 
-#Run everyday at 12am
-scheduler = AsyncIOScheduler(timezone="Asia/Kolkata")
-scheduler.add_job(job_close, trigger="cron", hour=23, minute=55)
-scheduler.start()
 
 async def job_open():
     ws_chats = get_all_chat_id()
@@ -127,7 +125,16 @@ async def job_open():
         except Exception as e:
             logger.info(f"Unable To Open Group {warner.chat_id} - {e}")
 
-# Run everyday at 06
+# Close every day at 12am and open at 6am (IST)
 scheduler = AsyncIOScheduler(timezone="Asia/Kolkata")
-scheduler.add_job(job_open, trigger="cron", hour=6, minute=10)
+scheduler.add_job(job_close, trigger="cron", hour=0, minute=0)
+scheduler.add_job(job_open, trigger="cron", hour=6, minute=0)
 scheduler.start()
+
+
+__help__ = """
+*Night Mode:*
+ • `/addnt`*:* Closes the group every night at 12 AM (IST) and opens it again at 6 AM
+ • `/rmnt`*:* Turns night mode off
+"""
+__mod_name__ = "Night Mode"

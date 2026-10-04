@@ -10,12 +10,12 @@ from IronRobo.modules.helper_funcs.telethn.chatstatus import (
 
 async def purge_messages(event):
     start = time.perf_counter()
-    if event.from_id is None:
+    if event.sender_id is None:
         return
 
     if not await user_is_admin(
         user_id=event.sender_id, message=event
-    ) and event.from_id not in [1087968824]:
+    ) and event.sender_id != event.chat_id:
         await event.reply("Only Admins are allowed to use this command")
         return
 
@@ -31,7 +31,6 @@ async def purge_messages(event):
     message_id = reply_msg.id
     delete_to = event.message.id
 
-    messages.append(event.reply_to_msg_id)
     for msg_id in range(message_id, delete_to + 1):
         messages.append(msg_id)
         if len(messages) == 100:
@@ -48,12 +47,12 @@ async def purge_messages(event):
 
 
 async def delete_messages(event):
-    if event.from_id is None:
+    if event.sender_id is None:
         return
 
     if not await user_is_admin(
         user_id=event.sender_id, message=event
-    ) and event.from_id not in [1087968824]:
+    ) and event.sender_id != event.chat_id:
         await event.reply("Only Admins are allowed to use this command")
         return
 
@@ -77,6 +76,10 @@ DEL_HANDLER = delete_messages, events.NewMessage(pattern="^[!/]del$")
 telethn.add_event_handler(*PURGE_HANDLER)
 telethn.add_event_handler(*DEL_HANDLER)
 
-__mod_name__ = "DETELE"
+__help__ = """
+ • `/del`*:* Deletes the message you replied to
+ • `/purge`*:* Deletes all messages between this and the replied message
+"""
+__mod_name__ = "Purges"
 __command_list__ = ["del", "purge"]
 __handlers__ = [PURGE_HANDLER, DEL_HANDLER]

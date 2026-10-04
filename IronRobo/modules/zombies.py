@@ -53,6 +53,9 @@ async def is_administrator(user_id: int, message):
 async def zombies(event):
     """ For .zombies command, list all the zombies in a chat. """
 
+    if event.is_private:
+        await event.respond("This command only works in groups.")
+        return
     con = event.pattern_match.group(1).lower()
     del_u = 0
     del_status = "No Deleted Accounts Found, Group Is Clean."
@@ -63,7 +66,6 @@ async def zombies(event):
 
             if user.deleted:
                 del_u += 1
-                await sleep(1)
         if del_u > 0:
             del_status = f"Found **{del_u}** Zombies In This Group.\
             \nClean Them By Using - `/zombies clean`"
@@ -76,7 +78,7 @@ async def zombies(event):
     creator = chat.creator
 
     # Well
-    if not await is_administrator(user_id=event.from_id, message=event):
+    if not await is_administrator(user_id=event.sender_id, message=event):
         await event.respond("You're Not An Admin!")
         return
 
@@ -112,3 +114,10 @@ async def zombies(event):
 
     await cleaning_zombies.edit(del_status)
 
+
+
+__help__ = """
+ • `/zombies`*:* Counts the deleted accounts in the group
+ • `/zombies clean`*:* Removes the deleted accounts from the group
+"""
+__mod_name__ = "Zombies"

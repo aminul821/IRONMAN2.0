@@ -1,17 +1,15 @@
-import traceback
-
-import requests
 import html
+import io
 import random
 import traceback
-import sys
-import pretty_errors
-import io
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import CallbackContext, CommandHandler
-from IronRobo import dispatcher, DEV_USERS, OWNER_ID
 
-pretty_errors.mono()
+from IronRobo import DEV_USERS, EVENT_LOGS, LOGGER, OWNER_ID, dispatcher
+from telegram import Update
+from telegram.error import NetworkError, RetryAfter, TimedOut, Unauthorized
+from telegram.ext import CallbackContext, CommandHandler
+
+# Errors that are part of normal operation and not worth reporting.
+IGNORED_ERRORS = (NetworkError, TimedOut, RetryAfter, Unauthorized)
 
 
 class ErrorsDict(dict):
@@ -33,34 +31,24 @@ class ErrorsDict(dict):
 
     def __len__(self):
         return len(self.raw)
-    
-    
+
+
 errors = ErrorsDict()
 
 
-def error_callback(update: Update, context: CallbackContext):
-    if not update:
+def error_callback(update: object, context: CallbackContext):
+    error = context.error
+    if isinstance(error, IGNORED_ERRORS):
+        LOGGER.warning("Telegram error while handling an update: %s", error)
         return
-    if context.error in errors:
+    LOGGER.error("Exception while handling an update", exc_info=error)
+    if not isinstance(update, Update):
         return
-    try:
-        stringio = io.StringIO()
-        pretty_errors.output_stderr = stringio
-        output = pretty_errors.excepthook(
-            type(context.error), context.error, context.error.__traceback__
-        )
-        pretty_errors.output_stderr = sys.stderr
-        pretty_error = stringio.getvalue()
-        stringio.close()
-    except:
-        pretty_error = "Failed to create pretty error."    
-    tb_list = traceback.format_exception(
-        None, context.error, context.error.__traceback__
-    )
-    tb = "".join(tb_list)
-    pretty_message = (
-        "{}\n"
-        "-------------------------------------------------------------------------------\n"
+    if error in errors:
+        return
+
+    tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
+    report = (
         "An exception was raised while handling an update\n"
         "User: {}\n"
         "Chat: {} {}\n"
@@ -68,38 +56,25 @@ def error_callback(update: Update, context: CallbackContext):
         "Message: {}\n\n"
         "Full Traceback: {}"
     ).format(
-            pretty_error,        
-        update.effective_user.id,
+        update.effective_user.id if update.effective_user else "",
         update.effective_chat.title if update.effective_chat else "",
         update.effective_chat.id if update.effective_chat else "",
         update.callback_query.data if update.callback_query else "None",
         update.effective_message.text if update.effective_message else "No message",
         tb,
     )
-    key = requests.post(
-        "https://nekobin.com/api/documents", json={"content": pretty_message}
-    ).json()
-    e = html.escape(f"{context.error}")
-    if not key.get("result", {}).get("key"):
-        with open("error.txt", "w+") as f:
-            f.write(pretty_message)
+    e = html.escape(f"{error}")
+    doc = io.BytesIO(report.encode("utf-8"))
+    doc.name = "error.txt"
+    try:
         context.bot.send_document(
-            OWNER_ID,
-                open("error.txt", "rb"),
-                caption=f"#{context.error.identifier}\n<b>An unknown error occured:</b>\n<code>{e}</code>",
-                parse_mode="html",
-            )
-        return
-    key = key.get("result").get("key")
-    url = f"https://nekobin.com/{key}.py"
-    context.bot.send_message(
-        OWNER_ID,
-            text=f"#{context.error.identifier}\n<b>An unknown error occured:</b>\n<code>{e}</code>",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("Nekobin", url=url)]]
-            ),
-        parse_mode="html",
-    )
+            EVENT_LOGS or OWNER_ID,
+            doc,
+            caption=f"#{error.identifier}\n<b>An unknown error occured:</b>\n<code>{e[:900]}</code>",
+            parse_mode="html",
+        )
+    except Exception:
+        LOGGER.exception("Could not send the error report")
 
 
 def list_errors(update: Update, context: CallbackContext):
@@ -110,18 +85,17 @@ def list_errors(update: Update, context: CallbackContext):
     }
     msg = "<b>Errors List:</b>\n"
     for x in e:
-        msg += f"• <code>{x}:</code> <b>{e[x]}</b> #{x.identifier}\n"
+        msg += f"• <code>{html.escape(str(x))}:</code> <b>{e[x]}</b> #{x.identifier}\n"
     msg += f"{len(errors)} have occurred since startup."
     if len(msg) > 4096:
-        with open("errors_msg.txt", "w+") as f:
-            f.write(msg)
+        doc = io.BytesIO(msg.encode("utf-8"))
+        doc.name = "errors_msg.txt"
         context.bot.send_document(
             update.effective_chat.id,
-            open("errors_msg.txt", "rb"),
-            caption=f"Too many errors have occured..",
-            parse_mode="html",
+            doc,
+            caption="Too many errors have occured..",
         )
-        return    
+        return
     update.effective_message.reply_text(msg, parse_mode="html")
 
 

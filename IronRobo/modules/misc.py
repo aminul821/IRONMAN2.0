@@ -37,6 +37,9 @@ Keep in mind that your message <b>MUST</b> contain some text other than just a b
 def echo(update: Update, context: CallbackContext):
     args = update.effective_message.text.split(None, 1)
     message = update.effective_message
+    if len(args) < 2:
+        message.reply_text("Give me something to say!")
+        return
 
     if message.reply_to_message:
         message.reply_to_message.reply_text(
@@ -94,7 +97,7 @@ __help__ = """
 *Wikipedia:*
  ❍ /wiki <query>*:* wikipedia your query
 *Wallpapers:*
- ❍ /wall <query>*:* get a wallpaper from wall.alphacoders.com
+ ❍ /wall <query>*:* get a wallpaper
 *Currency converter:* 
  ❍ /cash*:* currency converter
 Example:
@@ -104,7 +107,7 @@ Example:
 Output: `1.0 USD = 75.505 INR`
 
 *MATHS*
-Solves complex math problems using https://newton.now.sh
+Solves math problems
 ❍ /math*:* Math `/math 2^2+2(2)`
 ❍ /factor*:* Factor `/factor x^2 + 2x`
 ❍ /derive*:* Derive `/derive x^2+2x`

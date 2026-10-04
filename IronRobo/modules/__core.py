@@ -9,7 +9,6 @@ from IronRobo import OWNER_ID
 from IronRobo import TEMP_DOWNLOAD_DIRECTORY as path
 from IronRobo import TEMP_DOWNLOAD_DIRECTORY
 from datetime import datetime
-water = './IronRobo/resources/ironrobo.jpg'
 client = tbot
 
 @register(pattern=r"^/send ?(.*)")
@@ -18,7 +17,6 @@ async def Prof(event):
         pass
     else:
         return
-    thumb = water
     message_id = event.message.id
     input_str = event.pattern_match.group(1)
     the_plugin_file = "./IronRobo/modules/{}.py".format(input_str)
@@ -29,7 +27,6 @@ async def Prof(event):
              the_plugin_file,
              force_document=True,
              allow_cache=False,
-             thumb=thumb,
              reply_to=message_id,
          )
     else:
@@ -76,7 +73,6 @@ async def install(event):
             j = await event.reply(str(e))
             await asyncio.sleep(3)
             await j.delete()
-            os.remove(downloaded_file_name)
     await asyncio.sleep(3)
     await event.delete()
 

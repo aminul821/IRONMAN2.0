@@ -1,56 +1,61 @@
+import html
+import io
+from urllib.parse import quote
+
 import wikipedia
 from IronRobo import dispatcher
 from IronRobo.modules.disable import DisableAbleCommandHandler
 from telegram import ParseMode, Update
-from telegram.ext import CallbackContext, run_async
+from telegram.ext import CallbackContext
 from wikipedia.exceptions import DisambiguationError, PageError
 
 
-@run_async
 def wiki(update: Update, context: CallbackContext):
-    msg = (
-        update.effective_message.reply_to_message
-        if update.effective_message.reply_to_message
-        else update.effective_message
-    )
-    res = ""
-    if msg == update.effective_message:
-        search = msg.text.split(" ", maxsplit=1)[1]
+    message = update.effective_message
+    parts = message.text.split(" ", maxsplit=1)
+    if len(parts) > 1:
+        search = parts[1]
+    elif message.reply_to_message and message.reply_to_message.text:
+        search = message.reply_to_message.text
     else:
-        search = msg.text
+        message.reply_text("Give me something to search, eg: `/wiki Python`", parse_mode=ParseMode.MARKDOWN)
+        return
     try:
-        res = wikipedia.summary(search)
+        page = wikipedia.page(search, auto_suggest=False)
+        res = page.summary
+        title, url = page.title, page.url
     except DisambiguationError as e:
-        update.message.reply_text(
-            "Disambiguated pages found! Adjust your query accordingly.\n<i>{}</i>".format(
-                e
-            ),
+        options = "\n".join(html.escape(o) for o in e.options[:10])
+        message.reply_text(
+            f"Disambiguated pages found! Adjust your query accordingly.\n<i>{options}</i>",
             parse_mode=ParseMode.HTML,
         )
-    except PageError as e:
-        update.message.reply_text(
-            "<code>{}</code>".format(e), parse_mode=ParseMode.HTML
+        return
+    except PageError:
+        try:
+            res = wikipedia.summary(search)
+            title, url = search, f"https://en.wikipedia.org/wiki/{quote(search.replace(' ', '_'))}"
+        except Exception:
+            message.reply_text("No results found.")
+            return
+    except Exception:
+        message.reply_text("Wikipedia isn't reachable right now, try again later.")
+        return
+
+    result = f"<b>{html.escape(title)}</b>\n\n<i>{html.escape(res)}</i>\n"
+    result += f'<a href="{html.escape(url)}">Read more...</a>'
+    if len(result) > 4000:
+        doc = io.BytesIO(f"{title}\n\n{res}\n\n{url}".encode("utf-8"))
+        doc.name = "result.txt"
+        context.bot.send_document(
+            chat_id=update.effective_chat.id,
+            document=doc,
+            reply_to_message_id=message.message_id,
+            caption=title[:1000],
         )
-    if res:
-        result = f"<b>{search}</b>\n\n"
-        result += f"<i>{res}</i>\n"
-        result += f"""<a href="https://en.wikipedia.org/wiki/{search.replace(" ", "%20")}">Read more...</a>"""
-        if len(result) > 4000:
-            with open("result.txt", "w") as f:
-                f.write(f"{result}\n\nUwU OwO OmO UmU")
-            with open("result.txt", "rb") as f:
-                context.bot.send_document(
-                    document=f,
-                    filename=f.name,
-                    reply_to_message_id=update.message.message_id,
-                    chat_id=update.effective_chat.id,
-                    parse_mode=ParseMode.HTML,
-                )
-        else:
-            update.message.reply_text(
-                result, parse_mode=ParseMode.HTML, disable_web_page_preview=True
-            )
+    else:
+        message.reply_text(result, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 
-WIKI_HANDLER = DisableAbleCommandHandler("wiki", wiki)
+WIKI_HANDLER = DisableAbleCommandHandler("wiki", wiki, run_async=True)
 dispatcher.add_handler(WIKI_HANDLER)
