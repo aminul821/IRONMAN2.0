@@ -1,6 +1,6 @@
 import threading
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import Boolean, Column, UnicodeText
 
 
@@ -35,9 +35,9 @@ class CleanerBlueTextGlobal(BASE):
         self.command = command
 
 
-CleanerBlueTextChatSettings.__table__.create(checkfirst=True)
-CleanerBlueTextChat.__table__.create(checkfirst=True)
-CleanerBlueTextGlobal.__table__.create(checkfirst=True)
+ensure_table(CleanerBlueTextChatSettings.__table__)
+ensure_table(CleanerBlueTextChat.__table__)
+ensure_table(CleanerBlueTextGlobal.__table__)
 
 CLEANER_CHAT_SETTINGS = threading.RLock()
 CLEANER_CHAT_LOCK = threading.RLock()

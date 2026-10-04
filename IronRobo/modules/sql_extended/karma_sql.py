@@ -1,6 +1,6 @@
 import threading
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import BigInteger, Column, Integer, func
 
 
@@ -16,7 +16,7 @@ class Karma(BASE):
         self.karma = karma
 
 
-Karma.__table__.create(checkfirst=True)
+ensure_table(Karma.__table__)
 
 KARMA_LOCK = threading.RLock()
 

@@ -2,7 +2,7 @@ import threading
 
 from sqlalchemy import BigInteger, String, Column, Integer, UnicodeText
 
-from IronRobo.modules.sql import SESSION, BASE
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 
 DEF_COUNT = 1
 DEF_LIMIT = 0
@@ -38,8 +38,8 @@ class FloodSettings(BASE):
         return "<{} will executing {} for flood.>".format(self.chat_id, self.flood_type)
 
 
-FloodControl.__table__.create(checkfirst=True)
-FloodSettings.__table__.create(checkfirst=True)
+ensure_table(FloodControl.__table__)
+ensure_table(FloodSettings.__table__)
 
 INSERTION_FLOOD_LOCK = threading.RLock()
 INSERTION_FLOOD_SETTINGS_LOCK = threading.RLock()

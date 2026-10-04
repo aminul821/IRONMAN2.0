@@ -4,7 +4,7 @@ from typing import Union
 
 from sqlalchemy import BigInteger, Column, String, Boolean, UnicodeText, Integer
 
-from IronRobo.modules.sql import SESSION, BASE
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 
 
 class ChatAccessConnectionSettings(BASE):
@@ -49,9 +49,9 @@ class ConnectionHistory(BASE):
         return "<connection user {} history {}>".format(self.user_id, self.chat_id)
 
 
-ChatAccessConnectionSettings.__table__.create(checkfirst=True)
-Connection.__table__.create(checkfirst=True)
-ConnectionHistory.__table__.create(checkfirst=True)
+ensure_table(ChatAccessConnectionSettings.__table__)
+ensure_table(Connection.__table__)
+ensure_table(ConnectionHistory.__table__)
 
 CHAT_ACCESS_LOCK = threading.RLock()
 CONNECTION_INSERTION_LOCK = threading.RLock()

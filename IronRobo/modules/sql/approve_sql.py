@@ -2,7 +2,7 @@ import threading
 
 from sqlalchemy import BigInteger, Column, String, UnicodeText, Integer, func, distinct
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 
 
 class Approvals(BASE):
@@ -18,9 +18,13 @@ class Approvals(BASE):
         return "<Approve %s>" % self.user_id
 
 
-Approvals.__table__.create(checkfirst=True)
+ensure_table(Approvals.__table__)
 
 APPROVE_INSERTION_LOCK = threading.RLock()
+
+
+# is_approved runs for every group message, so keep approvals in memory.
+APPROVED = set()
 
 
 def approve(chat_id, user_id):
@@ -31,17 +35,16 @@ def approve(chat_id, user_id):
         except Exception:
             SESSION.rollback()
             raise
+        APPROVED.add((str(chat_id), int(user_id)))
 
 
 def is_approved(chat_id, user_id):
-    try:
-        return SESSION.query(Approvals).get((str(chat_id), user_id))
-    finally:
-        SESSION.close()
+    return (str(chat_id), int(user_id)) in APPROVED
 
 
 def disapprove(chat_id, user_id):
     with APPROVE_INSERTION_LOCK:
+        APPROVED.discard((str(chat_id), int(user_id)))
         disapprove_user = SESSION.query(Approvals).get((str(chat_id), user_id))
         if disapprove_user:
             SESSION.delete(disapprove_user)
@@ -62,3 +65,15 @@ def list_approved(chat_id):
         )
     finally:
         SESSION.close()
+
+
+def __load_approvals():
+    try:
+        APPROVED.update(
+            (row.chat_id, int(row.user_id)) for row in SESSION.query(Approvals).all()
+        )
+    finally:
+        SESSION.close()
+
+
+__load_approvals()

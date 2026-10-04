@@ -1,6 +1,6 @@
 import threading
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import Column, String, UnicodeText, distinct, func
 
 
@@ -17,7 +17,7 @@ class Disable(BASE):
         return "Disabled cmd {} in {}".format(self.command, self.chat_id)
 
 
-Disable.__table__.create(checkfirst=True)
+ensure_table(Disable.__table__)
 DISABLE_INSERTION_LOCK = threading.RLock()
 
 DISABLED = {}

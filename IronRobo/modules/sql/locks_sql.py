@@ -3,7 +3,7 @@ import threading
 
 from sqlalchemy import Column, String, Boolean
 
-from IronRobo.modules.sql import SESSION, BASE
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 
 
 class Permissions(BASE):
@@ -75,15 +75,16 @@ class Restrictions(BASE):
 # For those who faced database error, Just uncomment the
 # line below and run bot for 1 time & remove that line!
 
-Permissions.__table__.create(checkfirst=True)
+ensure_table(Permissions.__table__)
 # Permissions.__table__.drop()
-Restrictions.__table__.create(checkfirst=True)
+ensure_table(Restrictions.__table__)
 
 PERM_LOCK = threading.RLock()
 RESTR_LOCK = threading.RLock()
 
 
 def init_permissions(chat_id, reset=False):
+    _invalidate(chat_id)
     curr_perm = SESSION.query(Permissions).get(str(chat_id))
     if reset:
         SESSION.delete(curr_perm)
@@ -95,6 +96,7 @@ def init_permissions(chat_id, reset=False):
 
 
 def init_restrictions(chat_id, reset=False):
+    _invalidate(chat_id)
     curr_restr = SESSION.query(Restrictions).get(str(chat_id))
     if reset:
         SESSION.delete(curr_restr)
@@ -106,6 +108,7 @@ def init_restrictions(chat_id, reset=False):
 
 
 def update_lock(chat_id, lock_type, locked):
+    _invalidate(chat_id)
     with PERM_LOCK:
         curr_perm = SESSION.query(Permissions).get(str(chat_id))
         if not curr_perm:
@@ -148,9 +151,11 @@ def update_lock(chat_id, lock_type, locked):
 
         SESSION.add(curr_perm)
         SESSION.commit()
+    _invalidate(chat_id)
 
 
 def update_restriction(chat_id, restr_type, locked):
+    _invalidate(chat_id)
     with RESTR_LOCK:
         curr_restr = SESSION.query(Restrictions).get(str(chat_id))
         if not curr_restr:
@@ -171,11 +176,37 @@ def update_restriction(chat_id, restr_type, locked):
             curr_restr.preview = locked
         SESSION.add(curr_restr)
         SESSION.commit()
+    _invalidate(chat_id)
+
+
+# del_lockables checks every lock type on every group message; cache each
+# chat's rows and drop the cache whenever they change.
+_PERM_CACHE = {}
+_RESTR_CACHE = {}
+_MISSING = object()
+
+
+def _cached(cache, model, chat_id):
+    chat_id = str(chat_id)
+    row = cache.get(chat_id, _MISSING)
+    if row is _MISSING:
+        try:
+            row = SESSION.query(model).get(chat_id)
+            if row is not None:
+                SESSION.expunge(row)
+        finally:
+            SESSION.close()
+        cache[chat_id] = row
+    return row
+
+
+def _invalidate(chat_id):
+    _PERM_CACHE.pop(str(chat_id), None)
+    _RESTR_CACHE.pop(str(chat_id), None)
 
 
 def is_locked(chat_id, lock_type):
-    curr_perm = SESSION.query(Permissions).get(str(chat_id))
-    SESSION.close()
+    curr_perm = _cached(_PERM_CACHE, Permissions, chat_id)
 
     if not curr_perm:
         return False
@@ -217,8 +248,7 @@ def is_locked(chat_id, lock_type):
 
 
 def is_restr_locked(chat_id, lock_type):
-    curr_restr = SESSION.query(Restrictions).get(str(chat_id))
-    SESSION.close()
+    curr_restr = _cached(_RESTR_CACHE, Restrictions, chat_id)
 
     if not curr_restr:
         return False
@@ -255,6 +285,8 @@ def get_restr(chat_id):
 
 
 def migrate_chat(old_chat_id, new_chat_id):
+    _invalidate(old_chat_id)
+    _invalidate(new_chat_id)
     with PERM_LOCK:
         perms = SESSION.query(Permissions).get(str(old_chat_id))
         if perms:

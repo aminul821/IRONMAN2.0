@@ -2,7 +2,7 @@ import threading
 
 from sqlalchemy import BigInteger, Column, UnicodeText, Integer, String, Boolean
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 
 
 class GloballyMutedUsers(BASE):
@@ -38,8 +38,8 @@ class GmuteSettings(BASE):
         return "<Gmute setting {} ({})>".format(self.chat_id, self.setting)
 
 
-GloballyMutedUsers.__table__.create(checkfirst=True)
-GmuteSettings.__table__.create(checkfirst=True)
+ensure_table(GloballyMutedUsers.__table__)
+ensure_table(GmuteSettings.__table__)
 
 GMUTED_USERS_LOCK = threading.RLock()
 GMUTE_SETTING_LOCK = threading.RLock()

@@ -2,7 +2,7 @@
 import threading
 
 from IronRobo.modules.helper_funcs.msg_types import Types
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import Boolean, Column, Integer, String, UnicodeText, distinct, func
 
 
@@ -44,8 +44,8 @@ class Buttons(BASE):
         self.same_line = same_line
 
 
-Notes.__table__.create(checkfirst=True)
-Buttons.__table__.create(checkfirst=True)
+ensure_table(Notes.__table__)
+ensure_table(Buttons.__table__)
 
 NOTES_INSERTION_LOCK = threading.RLock()
 BUTTONS_INSERTION_LOCK = threading.RLock()

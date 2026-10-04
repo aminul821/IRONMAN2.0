@@ -1,5 +1,5 @@
 from sqlalchemy import Boolean, Column, Integer, String, UnicodeText
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 
 
 class Nsfwatch(BASE):
@@ -10,7 +10,7 @@ class Nsfwatch(BASE):
         self.chat_id = chat_id
 
 
-Nsfwatch.__table__.create(checkfirst=True)
+ensure_table(Nsfwatch.__table__)
 
 
 def add_nsfwatch(chat_id: str):

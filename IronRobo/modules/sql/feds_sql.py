@@ -1,7 +1,7 @@
 import threading
 
 from IronRobo import dispatcher
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import BigInteger, Boolean, Column, Integer, String, UnicodeText
 from telegram.error import BadRequest, Unauthorized
 
@@ -87,11 +87,11 @@ class FedSubs(BASE):
 # BansF.__table__.drop()
 # FedSubs.__table__.drop()
 
-Federations.__table__.create(checkfirst=True)
-ChatF.__table__.create(checkfirst=True)
-BansF.__table__.create(checkfirst=True)
-FedsUserSettings.__table__.create(checkfirst=True)
-FedSubs.__table__.create(checkfirst=True)
+ensure_table(Federations.__table__)
+ensure_table(ChatF.__table__)
+ensure_table(BansF.__table__)
+ensure_table(FedsUserSettings.__table__)
+ensure_table(FedSubs.__table__)
 
 FEDS_LOCK = threading.RLock()
 CHAT_FEDS_LOCK = threading.RLock()

@@ -2,7 +2,7 @@ import threading
 
 from sqlalchemy import func, distinct, Column, String, UnicodeText, Integer
 
-from IronRobo.modules.sql import SESSION, BASE
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 
 
 class BlackListFilters(BASE):
@@ -42,8 +42,8 @@ class BlacklistSettings(BASE):
         )
 
 
-BlackListFilters.__table__.create(checkfirst=True)
-BlacklistSettings.__table__.create(checkfirst=True)
+ensure_table(BlackListFilters.__table__)
+ensure_table(BlacklistSettings.__table__)
 
 BLACKLIST_FILTER_INSERTION_LOCK = threading.RLock()
 BLACKLIST_SETTINGS_INSERTION_LOCK = threading.RLock()

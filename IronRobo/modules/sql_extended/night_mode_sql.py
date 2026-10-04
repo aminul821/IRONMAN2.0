@@ -1,5 +1,5 @@
 from sqlalchemy import Boolean, Column, Integer, String, UnicodeText
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 
 
 class Nightmode(BASE):
@@ -10,7 +10,7 @@ class Nightmode(BASE):
         self.chat_id = chat_id
 
 
-Nightmode.__table__.create(checkfirst=True)
+ensure_table(Nightmode.__table__)
 
 
 def add_nightmode(chat_id: str):

@@ -1,6 +1,6 @@
 import threading
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import Column, Integer, String, UnicodeText, distinct, func
 
 
@@ -41,8 +41,8 @@ class StickerSettings(BASE):
         )
 
 
-StickersFilters.__table__.create(checkfirst=True)
-StickerSettings.__table__.create(checkfirst=True)
+ensure_table(StickersFilters.__table__)
+ensure_table(StickerSettings.__table__)
 
 STICKERS_FILTER_INSERTION_LOCK = threading.RLock()
 STICKSET_FILTER_INSERTION_LOCK = threading.RLock()

@@ -1,6 +1,6 @@
 import threading
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import BigInteger, Boolean, Column, Integer, String, UnicodeText
 
 
@@ -35,8 +35,8 @@ class GbanSettings(BASE):
         return "<Gban setting {} ({})>".format(self.chat_id, self.setting)
 
 
-GloballyBannedUsers.__table__.create(checkfirst=True)
-GbanSettings.__table__.create(checkfirst=True)
+ensure_table(GloballyBannedUsers.__table__)
+ensure_table(GbanSettings.__table__)
 
 GBANNED_USERS_LOCK = threading.RLock()
 GBAN_SETTING_LOCK = threading.RLock()

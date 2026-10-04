@@ -3,7 +3,7 @@ import threading
 from typing import Union
 
 from IronRobo.modules.helper_funcs.msg_types import Types
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import BigInteger, Boolean, Column, Integer, String, UnicodeText
 
 DEFAULT_WELCOME = "Hey {first}, how are you?"
@@ -318,12 +318,12 @@ class CleanServiceSetting(BASE):
         return "<Chat used clean service ({})>".format(self.chat_id)
 
 
-Welcome.__table__.create(checkfirst=True)
-WelcomeButtons.__table__.create(checkfirst=True)
-GoodbyeButtons.__table__.create(checkfirst=True)
-WelcomeMute.__table__.create(checkfirst=True)
-WelcomeMuteUsers.__table__.create(checkfirst=True)
-CleanServiceSetting.__table__.create(checkfirst=True)
+ensure_table(Welcome.__table__)
+ensure_table(WelcomeButtons.__table__)
+ensure_table(GoodbyeButtons.__table__)
+ensure_table(WelcomeMute.__table__)
+ensure_table(WelcomeMuteUsers.__table__)
+ensure_table(CleanServiceSetting.__table__)
 
 INSERTION_LOCK = threading.RLock()
 WELC_BTN_LOCK = threading.RLock()

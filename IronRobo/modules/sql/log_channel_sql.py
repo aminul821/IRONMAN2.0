@@ -1,6 +1,6 @@
 import threading
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import Column, String, distinct, func
 
 
@@ -14,7 +14,7 @@ class GroupLogs(BASE):
         self.log_channel = str(log_channel)
 
 
-GroupLogs.__table__.create(checkfirst=True)
+ensure_table(GroupLogs.__table__)
 
 LOGS_INSERTION_LOCK = threading.RLock()
 

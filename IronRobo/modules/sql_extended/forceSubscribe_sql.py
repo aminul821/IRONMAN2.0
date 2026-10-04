@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Numeric, Boolean
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 
 
 class forceSubscribe(BASE):
@@ -12,7 +12,7 @@ class forceSubscribe(BASE):
         self.channel = channel
 
 
-forceSubscribe.__table__.create(checkfirst=True)
+ensure_table(forceSubscribe.__table__)
 
 
 def fs_settings(chat_id):

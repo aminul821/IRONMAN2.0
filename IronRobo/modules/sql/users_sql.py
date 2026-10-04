@@ -1,7 +1,7 @@
 import threading
 
 from IronRobo import dispatcher
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import (
     BigInteger,
     Column,
@@ -69,9 +69,9 @@ class ChatMembers(BASE):
         )
 
 
-Users.__table__.create(checkfirst=True)
-Chats.__table__.create(checkfirst=True)
-ChatMembers.__table__.create(checkfirst=True)
+ensure_table(Users.__table__)
+ensure_table(Chats.__table__)
+ensure_table(ChatMembers.__table__)
 
 INSERTION_LOCK = threading.RLock()
 

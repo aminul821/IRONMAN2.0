@@ -1,5 +1,5 @@
 from IronRobo import DB_URI, LOGGER
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
 
@@ -25,18 +25,31 @@ def _upgrade_id_columns(engine):
 
 
 def start() -> scoped_session:
-    engine_kwargs = {"pool_pre_ping": True}
+    # Recycle connections before the database's idle timeout instead of
+    # pinging before every query: each ping is a full network round trip,
+    # which adds up fast with a remote database.
+    engine_kwargs = {"pool_recycle": 240}
     if DB_URI.startswith("postgresql"):
         engine_kwargs["client_encoding"] = "utf8"
     engine = create_engine(DB_URI, **engine_kwargs)
     if DB_URI.startswith("postgresql"):
         _upgrade_id_columns(engine)
     BASE.metadata.bind = engine
-    BASE.metadata.create_all(engine)
+    # One query for all table names, so modules don't each check their own.
+    EXISTING_TABLES.update(inspect(engine).get_table_names())
     return scoped_session(sessionmaker(bind=engine, autoflush=False))
 
 
+def ensure_table(table):
+    """Create a module's table if it doesn't exist yet (no query when it does)."""
+    if table.name in EXISTING_TABLES:
+        return
+    table.create(checkfirst=True)
+    EXISTING_TABLES.add(table.name)
+
+
 BASE = declarative_base()
+EXISTING_TABLES = set()
 SESSION = start()
 
 

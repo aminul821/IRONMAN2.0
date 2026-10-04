@@ -449,15 +449,31 @@ def check_and_ban(update, user_id, should_message=True):
             update.effective_message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
+# Whether the bot may restrict members, per chat; checked at most every
+# RESTRICT_CHECK_INTERVAL seconds instead of once per message.
+RESTRICT_CHECK_INTERVAL = 5 * 60
+_restrict_cache = {}
+
+
+def _can_restrict(bot, chat):
+    now = time.monotonic()
+    cached = _restrict_cache.get(chat.id)
+    if cached and now - cached[1] < RESTRICT_CHECK_INTERVAL:
+        return cached[0]
+    allowed = bool(chat.get_member(bot.id).can_restrict_members)
+    _restrict_cache[chat.id] = (allowed, now)
+    return allowed
+
+
 @run_async
 def enforce_gban(update: Update, context: CallbackContext):
     # Not using @restrict handler to avoid spamming - just ignore if cant gban.
     bot = context.bot
+    if not sql.does_chat_gban(update.effective_chat.id):
+        return
     try:
-        restrict_permission = update.effective_chat.get_member(
-            bot.id
-        ).can_restrict_members
-    except Unauthorized:
+        restrict_permission = _can_restrict(bot, update.effective_chat)
+    except (Unauthorized, BadRequest):
         return
     if sql.does_chat_gban(update.effective_chat.id) and restrict_permission:
         user = update.effective_user

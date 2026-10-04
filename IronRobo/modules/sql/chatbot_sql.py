@@ -1,6 +1,6 @@
 import threading
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import Column, String
 
 
@@ -16,7 +16,7 @@ class ChatbotChats(BASE):
         self.expires = expires
 
 
-ChatbotChats.__table__.create(checkfirst=True)
+ensure_table(ChatbotChats.__table__)
 
 INSERTION_LOCK = threading.RLock()
 

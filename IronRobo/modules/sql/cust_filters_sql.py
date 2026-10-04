@@ -3,7 +3,7 @@ import threading
 from sqlalchemy import Column, String, UnicodeText, Boolean, Integer, distinct, func
 
 from IronRobo.modules.helper_funcs.msg_types import Types
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 
 
 class CustomFilters(BASE):
@@ -116,8 +116,8 @@ class Buttons(BASE):
         self.same_line = same_line
 
 
-CustomFilters.__table__.create(checkfirst=True)
-Buttons.__table__.create(checkfirst=True)
+ensure_table(CustomFilters.__table__)
+ensure_table(Buttons.__table__)
 
 CUST_FILT_LOCK = threading.RLock()
 BUTTON_LOCK = threading.RLock()

@@ -1,7 +1,7 @@
 import threading
 from typing import Union
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import BigInteger, Boolean, Column, Integer, String
 
 
@@ -29,8 +29,8 @@ class ReportingChatSettings(BASE):
         return "<Chat report settings ({})>".format(self.chat_id)
 
 
-ReportingUserSettings.__table__.create(checkfirst=True)
-ReportingChatSettings.__table__.create(checkfirst=True)
+ensure_table(ReportingUserSettings.__table__)
+ensure_table(ReportingChatSettings.__table__)
 
 CHAT_LOCK = threading.RLock()
 USER_LOCK = threading.RLock()

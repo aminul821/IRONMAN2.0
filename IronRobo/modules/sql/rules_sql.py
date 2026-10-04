@@ -1,6 +1,6 @@
 import threading
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import Column, String, UnicodeText, distinct, func
 
 
@@ -16,7 +16,7 @@ class Rules(BASE):
         return "<Chat {} rules: {}>".format(self.chat_id, self.rules)
 
 
-Rules.__table__.create(checkfirst=True)
+ensure_table(Rules.__table__)
 
 INSERTION_LOCK = threading.RLock()
 

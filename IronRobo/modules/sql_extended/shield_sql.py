@@ -1,6 +1,6 @@
 import threading
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import Column, String
 
 
@@ -20,8 +20,8 @@ class EnglishOnlyChats(BASE):
         self.chat_id = str(chat_id)
 
 
-ProfanityChats.__table__.create(checkfirst=True)
-EnglishOnlyChats.__table__.create(checkfirst=True)
+ensure_table(ProfanityChats.__table__)
+ensure_table(EnglishOnlyChats.__table__)
 
 LOCK = threading.RLock()
 PROFANITY = set()

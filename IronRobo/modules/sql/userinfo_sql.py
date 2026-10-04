@@ -1,6 +1,6 @@
 import threading
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import BigInteger, Column, Integer, UnicodeText
 
 
@@ -30,8 +30,8 @@ class UserBio(BASE):
         return "<User info %d>" % self.user_id
 
 
-UserInfo.__table__.create(checkfirst=True)
-UserBio.__table__.create(checkfirst=True)
+ensure_table(UserInfo.__table__)
+ensure_table(UserBio.__table__)
 
 INSERTION_LOCK = threading.RLock()
 

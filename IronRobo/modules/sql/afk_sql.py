@@ -1,6 +1,6 @@
 import threading
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import BigInteger, Boolean, Column, Integer, UnicodeText
 
 
@@ -20,7 +20,7 @@ class AFK(BASE):
         return "afk_status for {}".format(self.user_id)
 
 
-AFK.__table__.create(checkfirst=True)
+ensure_table(AFK.__table__)
 INSERTION_LOCK = threading.RLock()
 
 AFK_USERS = {}
@@ -52,6 +52,9 @@ def set_afk(user_id, reason=""):
 
 
 def rm_afk(user_id):
+    if user_id not in AFK_USERS:
+        # AFK_USERS mirrors the table, so there is nothing to remove
+        return False
     with INSERTION_LOCK:
         curr = SESSION.query(AFK).get(user_id)
         if curr:

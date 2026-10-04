@@ -1,6 +1,6 @@
 import threading
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import Column, String, UnicodeText
 
 
@@ -14,7 +14,7 @@ class BlacklistUsers(BASE):
         self.reason = reason
 
 
-BlacklistUsers.__table__.create(checkfirst=True)
+ensure_table(BlacklistUsers.__table__)
 
 BLACKLIST_LOCK = threading.RLock()
 BLACKLIST_USERS = set()

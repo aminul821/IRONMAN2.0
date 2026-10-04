@@ -1,6 +1,6 @@
 import threading
 
-from IronRobo.modules.sql import BASE, SESSION
+from IronRobo.modules.sql import BASE, SESSION, ensure_table
 from sqlalchemy import Column, Integer, UnicodeText
 
 
@@ -22,7 +22,7 @@ class RSS(BASE):
         )
 
 
-RSS.__table__.create(checkfirst=True)
+ensure_table(RSS.__table__)
 INSERTION_LOCK = threading.RLock()
 
 

@@ -1,3 +1,5 @@
+import time
+import threading
 from io import BytesIO
 from time import sleep
 
@@ -100,15 +102,52 @@ def broadcast(update: Update, context: CallbackContext):
         )
 
 
+# update_user costs several database round trips, so only write when
+# something changed or the entry is older than SEEN_TTL seconds.
+SEEN_TTL = 6 * 60 * 60
+SEEN_MAX = 50000
+_seen = {}
+_seen_lock = threading.Lock()
+CHAT_CHECK_INTERVAL = 10 * 60
+_chat_checked = {}
+
+
+def _remember(user_id, username, chat_id=None, chat_title=None):
+    """True if this user/chat combination still needs to be written."""
+    key = (user_id, chat_id)
+    value = (username, chat_title)
+    now = time.monotonic()
+    with _seen_lock:
+        old = _seen.get(key)
+        if old and old[0] == value and now - old[1] < SEEN_TTL:
+            return False
+        if len(_seen) >= SEEN_MAX:
+            _seen.clear()
+        _seen[key] = (value, now)
+    return True
+
+
+def _update_user(user_id, username, chat_id=None, chat_title=None):
+    if _remember(user_id, username, chat_id, chat_title):
+        try:
+            sql.update_user(user_id, username, chat_id, chat_title)
+        except Exception:
+            with _seen_lock:
+                _seen.pop((user_id, chat_id), None)
+            raise
+
+
 @run_async
 def log_user(update: Update, context: CallbackContext):
     chat = update.effective_chat
     msg = update.effective_message
+    if not msg.from_user:
+        return
 
-    sql.update_user(msg.from_user.id, msg.from_user.username, chat.id, chat.title)
+    _update_user(msg.from_user.id, msg.from_user.username, chat.id, chat.title)
 
-    if msg.reply_to_message:
-        sql.update_user(
+    if msg.reply_to_message and msg.reply_to_message.from_user:
+        _update_user(
             msg.reply_to_message.from_user.id,
             msg.reply_to_message.from_user.username,
             chat.id,
@@ -116,7 +155,7 @@ def log_user(update: Update, context: CallbackContext):
         )
 
     if msg.forward_from:
-        sql.update_user(msg.forward_from.id, msg.forward_from.username)
+        _update_user(msg.forward_from.id, msg.forward_from.username)
 
 
 @run_async
@@ -149,9 +188,16 @@ def chats(update: Update, context: CallbackContext):
 @run_async
 def chat_checker(update: Update, context: CallbackContext):
     bot = context.bot
+    chat_id = update.effective_message.chat.id
+    now = time.monotonic()
+    # one Telegram API call per chat every CHAT_CHECK_INTERVAL, not per message
+    with _seen_lock:
+        if now - _chat_checked.get(chat_id, -CHAT_CHECK_INTERVAL) < CHAT_CHECK_INTERVAL:
+            return
+        _chat_checked[chat_id] = now
     try:
         if update.effective_message.chat.get_member(bot.id).can_send_messages is False:
-            bot.leaveChat(update.effective_message.chat.id)
+            bot.leaveChat(chat_id)
     except Unauthorized:
         pass
 
