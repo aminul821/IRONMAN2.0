@@ -125,6 +125,7 @@ Instead of environment variables you can copy `IronRobo/sample_config.py` to
 | `STRICT_GBAN`, `ALLOW_EXCL`, `DEL_CMDS` | no | `True`/`False` switches |
 | `NO_LOAD` | no | Space separated modules to skip |
 | `BL_CHATS` | no | Space separated chat ids the bot leaves |
+| `ALLOWED_GROUPS` | no | Lock the bot to these group ids; groups the owner adds it to are allowed automatically, it leaves any other group |
 
 Apart from the chatbot (which needs `AI_API_KEY`), every feature works without
 extra API keys.

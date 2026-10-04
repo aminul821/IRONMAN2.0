@@ -120,6 +120,7 @@ if ENV:
     GENIUS_API_TOKEN = os.environ.get("GENIUS_API_TOKEN", None)
     ALLOW_CHATS = _env_bool("ALLOW_CHATS", True)
     BL_CHATS = _env_id_set("BL_CHATS")
+    ALLOWED_GROUPS = _env_id_set("ALLOWED_GROUPS")
 
 else:
     from IronRobo.config import Development as Config
@@ -194,6 +195,7 @@ else:
 
     try:
         BL_CHATS = set(int(x) for x in Config.BL_CHATS or [])
+        ALLOWED_GROUPS = set(int(x) for x in getattr(Config, "ALLOWED_GROUPS", None) or [])
     except ValueError:
         raise Exception("Your blacklisted chats list does not contain valid integers.")
 

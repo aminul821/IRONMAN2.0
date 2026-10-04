@@ -72,6 +72,9 @@ class Config(object):
     AI_MODEL = "claude-opus-5-5"
     GENIUS_API_TOKEN = None  # optional, for better /lyrics results
     BL_CHATS = []  # List of groups that you want blacklisted.
+    # Group ids the bot works in. Groups the owner adds the bot to are allowed
+    # automatically; from any other group the bot leaves. Empty = no restriction.
+    ALLOWED_GROUPS = []
     ALLOW_CHATS = True
     SPAMMERS = None
 
