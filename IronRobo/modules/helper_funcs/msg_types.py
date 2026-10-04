@@ -14,6 +14,8 @@ class Types(IntEnum):
     AUDIO = 5
     VOICE = 6
     VIDEO = 7
+    VIDEO_NOTE = 8
+    ANIMATION = 9
 
 
 def get_note_type(msg: Message):
@@ -55,6 +57,11 @@ def get_note_type(msg: Message):
         elif msg.reply_to_message.sticker:
             content = msg.reply_to_message.sticker.file_id
             data_type = Types.STICKER
+
+        elif msg.reply_to_message.animation:
+            content = msg.reply_to_message.animation.file_id
+            text, buttons = button_markdown_parser(msgtext, entities=entities)
+            data_type = Types.ANIMATION
 
         elif msg.reply_to_message.document:
             content = msg.reply_to_message.document.file_id
@@ -107,6 +114,11 @@ def get_welcome_type(msg: Message):
         content = msg.reply_to_message.sticker.file_id
         text = None
         data_type = Types.STICKER
+
+    elif msg.reply_to_message and msg.reply_to_message.animation:
+        content = msg.reply_to_message.animation.file_id
+        text = msg.reply_to_message.caption
+        data_type = Types.ANIMATION
 
     elif msg.reply_to_message and msg.reply_to_message.document:
         content = msg.reply_to_message.document.file_id
@@ -189,6 +201,11 @@ def get_filter_type(msg: Message):
         content = msg.reply_to_message.sticker.file_id
         text = None
         data_type = Types.STICKER
+
+    elif msg.reply_to_message and msg.reply_to_message.animation:
+        content = msg.reply_to_message.animation.file_id
+        text = msg.reply_to_message.caption
+        data_type = Types.ANIMATION
 
     elif msg.reply_to_message and msg.reply_to_message.document:
         content = msg.reply_to_message.document.file_id

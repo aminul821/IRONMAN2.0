@@ -17,6 +17,7 @@ from telegram.utils.helpers import mention_html, escape_markdown
 
 from IronRobo import dispatcher, LOGGER, DRAGONS
 from IronRobo.modules.disable import DisableAbleCommandHandler
+from IronRobo.modules.helper_funcs.media import safe_sender
 from IronRobo.modules.helper_funcs.handlers import MessageHandlerChecker
 from IronRobo.modules.helper_funcs.chat_status import user_admin
 from IronRobo.modules.helper_funcs.extraction import extract_text
@@ -38,15 +39,16 @@ from IronRobo.modules.helper_funcs.alternate import send_message, typing_action
 HANDLER_GROUP = 10
 
 ENUM_FUNC_MAP = {
-    sql.Types.TEXT.value: dispatcher.bot.send_message,
-    sql.Types.BUTTON_TEXT.value: dispatcher.bot.send_message,
-    sql.Types.STICKER.value: dispatcher.bot.send_sticker,
-    sql.Types.DOCUMENT.value: dispatcher.bot.send_document,
-    sql.Types.PHOTO.value: dispatcher.bot.send_photo,
-    sql.Types.AUDIO.value: dispatcher.bot.send_audio,
-    sql.Types.VOICE.value: dispatcher.bot.send_voice,
-    sql.Types.VIDEO.value: dispatcher.bot.send_video,
-    # sql.Types.VIDEO_NOTE.value: dispatcher.bot.send_video_note
+    sql.Types.TEXT.value: safe_sender(dispatcher.bot.send_message),
+    sql.Types.BUTTON_TEXT.value: safe_sender(dispatcher.bot.send_message),
+    sql.Types.STICKER.value: safe_sender(dispatcher.bot.send_sticker),
+    sql.Types.DOCUMENT.value: safe_sender(dispatcher.bot.send_document),
+    sql.Types.PHOTO.value: safe_sender(dispatcher.bot.send_photo),
+    sql.Types.AUDIO.value: safe_sender(dispatcher.bot.send_audio),
+    sql.Types.VOICE.value: safe_sender(dispatcher.bot.send_voice),
+    sql.Types.VIDEO.value: safe_sender(dispatcher.bot.send_video),
+    sql.Types.VIDEO_NOTE.value: safe_sender(dispatcher.bot.send_video_note),
+    sql.Types.ANIMATION.value: safe_sender(dispatcher.bot.send_animation),
 }
 
 
