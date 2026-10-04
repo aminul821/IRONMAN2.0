@@ -262,7 +262,15 @@ from IronRobo.utils import pyrogram_fix as _pyrogram_fix
 
 _pyrogram_fix.apply()
 
-updater = tg.Updater(TOKEN, workers=WORKERS, use_context=True)
+# If the message a reply points to is gone (e.g. another bot deletes
+# commands right away), send the answer anyway instead of failing with
+# "Message to be replied not found".
+updater = tg.Updater(
+    TOKEN,
+    workers=WORKERS,
+    use_context=True,
+    defaults=tg.Defaults(allow_sending_without_reply=True),
+)
 telethn = TelegramClient("ironman", API_ID, API_HASH)
 pbot = Client("ironmanpbot", api_id=API_ID, api_hash=API_HASH, bot_token=TOKEN)
 dispatcher = updater.dispatcher
