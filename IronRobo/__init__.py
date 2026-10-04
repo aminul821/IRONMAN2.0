@@ -243,6 +243,11 @@ import pyrogram.utils as _pyro_utils
 _pyro_utils.MIN_CHANNEL_ID = -1009999999999
 _pyro_utils.MIN_CHAT_ID = -999999999999
 
+# Pyrogram 1.4 can't connect when its message id clock is off; see the module.
+from IronRobo.utils import pyrogram_fix as _pyrogram_fix
+
+_pyrogram_fix.apply()
+
 updater = tg.Updater(TOKEN, workers=WORKERS, use_context=True)
 telethn = TelegramClient("ironman", API_ID, API_HASH)
 pbot = Client("ironmanpbot", api_id=API_ID, api_hash=API_HASH, bot_token=TOKEN)
