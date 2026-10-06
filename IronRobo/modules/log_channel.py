@@ -12,7 +12,7 @@ FILENAME = __name__.rsplit(".", 1)[-1]
 CATEGORIES = {
     "settings": "Changes to group settings (filters, notes, rules, locks, welcome, blacklist, flood…)",
     "admin": "Admin actions (ban, mute, kick, warn, promote, pin, approve…)",
-    "user": "Members joining and leaving",
+    "user": "Members joining and leaving (I need to be admin to see these)",
     "automated": "Things I do on my own (antiflood, blacklist, warn filters)",
     "reports": "Reports with /report or @admin",
 }
@@ -70,7 +70,14 @@ def categorize(func, result):
 if is_module_loaded(FILENAME):
     from telegram import ParseMode, Update
     from telegram.error import BadRequest, TelegramError, Unauthorized
-    from telegram.ext import CommandHandler, Filters, JobQueue, MessageHandler, run_async
+    from telegram.ext import (
+        ChatMemberHandler,
+        CommandHandler,
+        Filters,
+        JobQueue,
+        MessageHandler,
+        run_async,
+    )
     from telegram.utils.helpers import escape_markdown, mention_html
 
     from IronRobo import EVENT_LOGS, LOGGER, dispatcher
@@ -80,8 +87,12 @@ if is_module_loaded(FILENAME):
     def _decorate(result, chat, message):
         datetime_fmt = "%H:%M - %d-%m-%Y"
         result += f"\n<b>Event Stamp</b>: <code>{datetime.utcnow().strftime(datetime_fmt)}</code>"
-        if message and chat.type == chat.SUPERGROUP and chat.username:
-            result += f'\n<b>Link:</b> <a href="https://t.me/{chat.username}/{message.message_id}">click here</a>'
+        if message and chat.type == chat.SUPERGROUP:
+            if chat.username:
+                url = f"https://t.me/{chat.username}/{message.message_id}"
+            else:  # private supergroup: works for members
+                url = f"https://t.me/c/{str(chat.id)[4:]}/{message.message_id}"
+            result += f'\n<b>Message:</b> <a href="{url}">click here</a>'
         return result
 
     def send_chat_log(bot, chat, text, category="admin", message=None):
@@ -288,6 +299,62 @@ if is_module_loaded(FILENAME):
             parse_mode=ParseMode.MARKDOWN,
         )
 
+    def _in_chat(member):
+        return member.status in ("member", "administrator", "creator") or (
+            member.status == "restricted" and member.is_member
+        )
+
+    def _link_text(link, name, creator_id, creator_name):
+        text = html.escape(link)
+        if name:
+            text = f"{html.escape(name)} ({text})"
+        if creator_id:
+            text += f"\n<b>Link by:</b> {mention_html(int(creator_id), html.escape(creator_name or creator_id))}"
+        return text
+
+    def member_update(update: Update, context: CallbackContext):
+        """Joins and leaves, from Telegram's chat_member updates (bot must be admin)."""
+        change = update.chat_member
+        chat = update.effective_chat
+        if chat.type not in (chat.GROUP, chat.SUPERGROUP):
+            return
+        was_in, is_in = _in_chat(change.old_chat_member), _in_chat(change.new_chat_member)
+        if was_in == is_in or not sql.get_chat_log_channel(chat.id):
+            return
+        member = change.new_chat_member.user
+        actor = change.from_user
+        who = f"{mention_html(member.id, html.escape(member.first_name))} (<code>{member.id}</code>)"
+        title = f"<b>{html.escape(chat.title)}:</b>"
+        if is_in:
+            text = f"{title}\n#USER_JOINED\n<b>User:</b> {who}"
+            invite = change.invite_link
+            if invite:
+                creator = invite.creator
+                data = (
+                    invite.invite_link,
+                    invite.name or "",
+                    creator.id if creator else "",
+                    creator.first_name if creator else "",
+                )
+                text += "\n<b>Joined via:</b> " + _link_text(*data)
+                sql.set_join_link(chat.id, member.id, *data)
+            elif actor and actor.id != member.id:
+                text += f"\n<b>Added by:</b> {mention_html(actor.id, html.escape(actor.first_name))}"
+            else:
+                text += "\n<b>Joined via:</b> public link / username"
+        else:
+            if actor and actor.id == context.bot.id:
+                sql.pop_join_link(chat.id, member.id)
+                return  # my own bans/kicks are logged by the command that did them
+            tag = "USER_BANNED" if change.new_chat_member.status == "kicked" else "USER_LEFT"
+            text = f"{title}\n#{tag}\n<b>User:</b> {who}"
+            if actor and actor.id != member.id:
+                text += f"\n<b>Removed by:</b> {mention_html(actor.id, html.escape(actor.first_name))}"
+            joined = sql.pop_join_link(chat.id, member.id)
+            if joined:
+                text += "\n<b>Had joined via:</b> " + _link_text(*joined)
+        send_chat_log(context.bot, chat, text, "user")
+
     def channel_command(update: Update, context: CallbackContext):
         """/setlog or /id posted in a channel: tell the admin the channel id."""
         message = update.effective_message
@@ -422,6 +489,10 @@ You can also send /setlog inside the channel and forward that message to the gro
         run_async=True,
     )
     dispatcher.add_handler(CHANNEL_HANDLER)
+    MEMBER_HANDLER = ChatMemberHandler(
+        member_update, ChatMemberHandler.CHAT_MEMBER, run_async=True
+    )
+    dispatcher.add_handler(MEMBER_HANDLER)
 
 else:
     # run anyway if module not loaded

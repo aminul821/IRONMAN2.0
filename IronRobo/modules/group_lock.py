@@ -57,6 +57,19 @@ def guard(update: Update, context: CallbackContext):
 
     bot = context.bot
     msg = update.effective_message
+    if not msg:
+        # Member-status updates: the "added to group" message decides, not these.
+        member_update = update.my_chat_member
+        if (
+            member_update
+            and member_update.new_chat_member.status in ("member", "administrator")
+            and (member_update.from_user.id == OWNER_ID or member_update.from_user.id in DEV_USERS)
+            and chat.id not in BL_CHATS
+        ):
+            sql.allow(chat.id)
+            LOGGER.info("Owner added me to %s (%s), allowing it", chat.title, chat.id)
+            return
+        raise DispatcherHandlerStop
     added_me = bool(
         msg
         and msg.new_chat_members

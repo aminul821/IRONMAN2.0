@@ -712,18 +712,40 @@ def main():
     dispatcher.add_handler(migrate_handler)
     dispatcher.add_handler(donate_handler)
 
+    # chat_member isn't sent by default; the log channel needs it for joins/leaves.
+    allowed_updates = [
+        "message",
+        "edited_message",
+        "channel_post",
+        "edited_channel_post",
+        "callback_query",
+        "inline_query",
+        "chosen_inline_result",
+        "my_chat_member",
+        "chat_member",
+    ]
+
     if WEBHOOK:
         LOGGER.info("Using webhooks.")
         updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN)
 
         if CERT_PATH:
-            updater.bot.set_webhook(url=URL + TOKEN, certificate=open(CERT_PATH, "rb"))
+            updater.bot.set_webhook(
+                url=URL + TOKEN,
+                certificate=open(CERT_PATH, "rb"),
+                allowed_updates=allowed_updates,
+            )
         else:
-            updater.bot.set_webhook(url=URL + TOKEN)
+            updater.bot.set_webhook(url=URL + TOKEN, allowed_updates=allowed_updates)
 
     else:
         LOGGER.info("Using long polling.")
-        updater.start_polling(timeout=15, read_latency=4, drop_pending_updates=True)
+        updater.start_polling(
+            timeout=15,
+            read_latency=4,
+            drop_pending_updates=True,
+            allowed_updates=allowed_updates,
+        )
 
     if len(argv) not in (1, 3, 4):
         telethn.disconnect()

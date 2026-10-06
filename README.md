@@ -146,10 +146,11 @@ Like Rose, every group can send its moderation log to a channel:
 | --- | --- |
 | `settings` | Filters, notes, rules, locks, anti-flood, welcome, warn limit, blocklist changes |
 | `admin` | Bans, mutes, kicks, warns, promotions, approvals, pins, purges |
-| `user` | Members joining and leaving |
+| `user` | Members joining and leaving, with the invite link (and who made it) they joined through. The bot must be a group admin to see these |
 | `automated` | Actions the bot takes on its own: anti-flood, blocklist, warn filters |
 | `reports` | `/report` and `@admin` |
 
+Every log of a command links to the message (in supergroups).
 If the bot is removed from the channel, logging is turned off and the group is told.
 
 ## Moving a group from Rose
