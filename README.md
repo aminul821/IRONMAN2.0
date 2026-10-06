@@ -144,7 +144,7 @@ Like Rose, every group can send its moderation log to a channel:
 
 | Category | Logs |
 | --- | --- |
-| `settings` | Locks, anti-flood, welcome, warn limit, blocklist changes |
+| `settings` | Filters, notes, rules, locks, anti-flood, welcome, warn limit, blocklist changes |
 | `admin` | Bans, mutes, kicks, warns, promotions, approvals, pins, purges |
 | `user` | Members joining and leaving |
 | `automated` | Actions the bot takes on its own: anti-flood, blocklist, warn filters |

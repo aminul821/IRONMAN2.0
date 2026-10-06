@@ -3,6 +3,7 @@ from typing import Optional
 import IronRobo.modules.sql.rules_sql as sql
 from IronRobo import dispatcher
 from IronRobo.modules.helper_funcs.chat_status import user_admin
+from IronRobo.modules.log_channel import log_setting
 from IronRobo.modules.helper_funcs.string_handling import markdown_parser
 from telegram import (
     InlineKeyboardButton,
@@ -89,6 +90,7 @@ def set_rules(update: Update, context: CallbackContext):
 
         sql.set_rules(chat_id, markdown_rules)
         update.effective_message.reply_text("Successfully set rules for this group.")
+        log_setting(update, context, "RULES_SET")
 
 
 @run_async
@@ -97,6 +99,7 @@ def clear_rules(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     sql.set_rules(chat_id, "")
     update.effective_message.reply_text("Successfully cleared rules!")
+    log_setting(update, context, "RULES_CLEARED")
 
 
 def __stats__():

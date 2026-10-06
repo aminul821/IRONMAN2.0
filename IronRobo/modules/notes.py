@@ -1,3 +1,4 @@
+import html
 import re, ast
 from io import BytesIO
 import random
@@ -6,6 +7,7 @@ from typing import Optional
 import IronRobo.modules.sql.notes_sql as sql
 from IronRobo import LOGGER, JOIN_LOGGER, SUPPORT_CHAT, dispatcher, DRAGONS
 from IronRobo.modules.disable import DisableAbleCommandHandler
+from IronRobo.modules.log_channel import log_setting
 from IronRobo.modules.helper_funcs.media import safe_sender
 from IronRobo.modules.helper_funcs.handlers import MessageHandlerChecker
 from IronRobo.modules.helper_funcs.chat_status import user_admin, connection_status
@@ -276,6 +278,7 @@ def save(update: Update, context: CallbackContext):
     sql.add_note_to_db(
         chat_id, note_name, text, data_type, buttons=buttons, file=content
     )
+    log_setting(update, context, "NOTE_SAVED", f"<b>Note:</b> <code>#{html.escape(note_name)}</code>")
 
     msg.reply_text(
         f"Yas! Added `{note_name}`.\nGet it with /get `{note_name}`, or `#{note_name}`",
@@ -311,6 +314,7 @@ def clear(update: Update, context: CallbackContext):
 
         if sql.rm_note(chat_id, notename):
             update.effective_message.reply_text("Successfully removed note.")
+            log_setting(update, context, "NOTE_CLEARED", f"<b>Note:</b> <code>#{html.escape(notename)}</code>")
         else:
             update.effective_message.reply_text("That's not a note in my database!")
 
@@ -356,6 +360,7 @@ def clearall_btn(update: Update, context: CallbackContext):
                     note = notename.name.lower()
                     sql.rm_note(chat.id, note)
                 message.edit_text("Deleted all notes.")
+                log_setting(update, context, "NOTES_CLEARED", f"<b>Notes removed:</b> {len(note_list)}")
             except BadRequest:
                 return
 

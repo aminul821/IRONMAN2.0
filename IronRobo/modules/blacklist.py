@@ -12,7 +12,7 @@ from IronRobo.modules.disable import DisableAbleCommandHandler
 from IronRobo.modules.helper_funcs.chat_status import user_admin, user_not_admin
 from IronRobo.modules.helper_funcs.extraction import extract_text
 from IronRobo.modules.helper_funcs.misc import split_message
-from IronRobo.modules.log_channel import loggable, send_chat_log
+from IronRobo.modules.log_channel import log_setting, loggable, send_chat_log
 from IronRobo.modules.warns import warn
 from IronRobo.modules.helper_funcs.string_handling import extract_time
 from IronRobo.modules.connection import connected
@@ -95,6 +95,11 @@ def add_blacklist(update, context):
         )
         for trigger in to_blacklist:
             sql.add_to_blacklist(chat_id, trigger.lower())
+        log_setting(
+            update, context, "BLACKLIST_ADDED",
+            "<b>Words:</b> " + ", ".join(f"<code>{html.escape(t)}</code>" for t in to_blacklist),
+            chat_id=chat_id,
+        )
 
         if len(to_blacklist) == 1:
             send_message(
@@ -151,6 +156,12 @@ def unblacklist(update, context):
             success = sql.rm_from_blacklist(chat_id, trigger.lower())
             if success:
                 successful += 1
+        if successful:
+            log_setting(
+                update, context, "BLACKLIST_REMOVED",
+                "<b>Words:</b> " + ", ".join(f"<code>{html.escape(t)}</code>" for t in to_unblacklist),
+                chat_id=chat_id,
+            )
 
         if len(to_unblacklist) == 1:
             if successful:

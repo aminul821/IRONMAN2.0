@@ -33,6 +33,7 @@ from IronRobo.modules.helper_funcs.string_handling import (
 from IronRobo.modules.sql import cust_filters_sql as sql
 
 from IronRobo.modules.connection import connected
+from IronRobo.modules.log_channel import log_setting
 
 from IronRobo.modules.helper_funcs.alternate import send_message, typing_action
 
@@ -223,6 +224,10 @@ def filters(update, context):
             "Saved filter '{}' in *{}*!".format(keyword, chat_name),
             parse_mode=telegram.ParseMode.MARKDOWN,
         )
+        log_setting(
+            update, context, "FILTER_ADDED",
+            f"<b>Filter:</b> <code>{escape(keyword)}</code>", chat_id=chat_id,
+        )
     raise DispatcherHandlerStop
 
 
@@ -258,6 +263,10 @@ def stop_filter(update, context):
     for keyword in chat_filters:
         if keyword == args[1]:
             sql.remove_filter(chat_id, args[1])
+            log_setting(
+                update, context, "FILTER_STOPPED",
+                f"<b>Filter:</b> <code>{escape(args[1])}</code>", chat_id=chat_id,
+            )
             send_message(
                 update.effective_message,
                 "Okay, I'll stop replying to that filter in *{}*.".format(chat_name),
@@ -553,6 +562,7 @@ def rmall_callback(update, context):
                 sql.remove_filter(chat.id, i)
 
             msg.edit_text(f"Cleaned {count} filters in {chat.title}")
+            log_setting(update, context, "FILTERS_CLEARED", f"<b>Filters removed:</b> {count}")
 
         if member.status == "administrator":
             query.answer("Only owner of the chat can do this.")

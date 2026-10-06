@@ -10,7 +10,7 @@ FILENAME = __name__.rsplit(".", 1)[-1]
 
 # Log categories a group can switch on/off with /log and /nolog (like Rose).
 CATEGORIES = {
-    "settings": "Changes to group settings (locks, welcome, blacklist, flood, warn limit…)",
+    "settings": "Changes to group settings (filters, notes, rules, locks, welcome, blacklist, flood…)",
     "admin": "Admin actions (ban, mute, kick, warn, promote, pin, approve…)",
     "user": "Members joining and leaving",
     "automated": "Things I do on my own (antiflood, blacklist, warn filters)",
@@ -41,6 +41,16 @@ SETTINGS_TAGS = {
     "UNBLACKLIST",
     "AI_ENABLED",
     "AI_DISABLED",
+    "BLACKLIST_ADDED",
+    "BLACKLIST_REMOVED",
+    "FILTER_ADDED",
+    "FILTER_STOPPED",
+    "FILTERS_CLEARED",
+    "NOTE_SAVED",
+    "NOTE_CLEARED",
+    "NOTES_CLEARED",
+    "RULES_SET",
+    "RULES_CLEARED",
 }
 
 
@@ -61,7 +71,7 @@ if is_module_loaded(FILENAME):
     from telegram import ParseMode, Update
     from telegram.error import BadRequest, TelegramError, Unauthorized
     from telegram.ext import CommandHandler, Filters, JobQueue, MessageHandler, run_async
-    from telegram.utils.helpers import escape_markdown
+    from telegram.utils.helpers import escape_markdown, mention_html
 
     from IronRobo import EVENT_LOGS, LOGGER, dispatcher
     from IronRobo.modules.helper_funcs.chat_status import user_admin
@@ -80,6 +90,30 @@ if is_module_loaded(FILENAME):
         if not log_chat or category in sql.get_disabled_categories(chat.id):
             return
         _send(bot, log_chat, chat.id, _decorate(text, chat, message))
+
+    def log_setting(update, context, tag, detail="", chat_id=None, category="settings"):
+        """Log a settings change made by update's user. chat_id is the chat that
+        changed, when it differs from the current one (connected chats)."""
+        try:
+            bot = context.bot
+            chat = update.effective_chat
+            message = update.effective_message
+            if chat_id is not None and str(chat_id) != str(chat.id):
+                if not sql.get_chat_log_channel(chat_id):
+                    return
+                chat = bot.get_chat(chat_id)
+                message = None
+            if chat.type == chat.PRIVATE:
+                return
+            user = update.effective_user
+            text = f"<b>{html.escape(chat.title or str(chat.id))}:</b>\n#{tag}"
+            if user:
+                text += f"\n<b>Admin:</b> {mention_html(user.id, html.escape(user.first_name))}"
+            if detail:
+                text += f"\n{detail}"
+            send_chat_log(bot, chat, text, category, message)
+        except Exception:
+            LOGGER.exception("Could not log %s", tag)
 
     def loggable(func):
         @wraps(func)
@@ -398,4 +432,7 @@ else:
         return func
 
     def send_chat_log(bot, chat, text, category="admin", message=None):
+        return
+
+    def log_setting(update, context, tag, detail="", chat_id=None, category="settings"):
         return
