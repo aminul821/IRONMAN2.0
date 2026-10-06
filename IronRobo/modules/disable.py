@@ -65,6 +65,8 @@ if is_module_loaded(FILENAME):
                             return None
                         chat = update.effective_chat
                         user = update.effective_user
+                        if not user:  # channel posts have no sender
+                            return None
                         if user.id == 1087968824:
                             user_id = chat.id
                         else:

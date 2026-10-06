@@ -60,7 +60,7 @@ def categorize(func, result):
 if is_module_loaded(FILENAME):
     from telegram import ParseMode, Update
     from telegram.error import BadRequest, TelegramError, Unauthorized
-    from telegram.ext import CommandHandler, JobQueue, run_async
+    from telegram.ext import CommandHandler, Filters, JobQueue, MessageHandler, run_async
     from telegram.utils.helpers import escape_markdown
 
     from IronRobo import EVENT_LOGS, LOGGER, dispatcher
@@ -254,6 +254,20 @@ if is_module_loaded(FILENAME):
             parse_mode=ParseMode.MARKDOWN,
         )
 
+    def channel_command(update: Update, context: CallbackContext):
+        """/setlog or /id posted in a channel: tell the admin the channel id."""
+        message = update.effective_message
+        target = message.text.split(None, 1)[0].split("@")
+        if len(target) > 1 and target[1].lower() != context.bot.username.lower():
+            return
+        chat_id = update.effective_chat.id
+        message.reply_text(
+            f"✅ This channel's id is <code>{chat_id}</code>.\n\n"
+            f"Now send <code>/setlog {chat_id}</code> in your group, "
+            "or forward this channel's /setlog message to the group.",
+            parse_mode=ParseMode.HTML,
+        )
+
     @run_async
     @user_admin
     def unsetlog(update: Update, context: CallbackContext):
@@ -367,6 +381,13 @@ You can also send /setlog inside the channel and forward that message to the gro
     dispatcher.add_handler(LOG_CATEGORIES_HANDLER)
     dispatcher.add_handler(LOG_ON_HANDLER)
     dispatcher.add_handler(LOG_OFF_HANDLER)
+    # Command handlers don't see channel posts, so /setlog in a channel needs its own.
+    CHANNEL_HANDLER = MessageHandler(
+        Filters.update.channel_posts & Filters.regex(r"^[/!](setlog|id)(@\w+)?(\s|$)"),
+        channel_command,
+        run_async=True,
+    )
+    dispatcher.add_handler(CHANNEL_HANDLER)
 
 else:
     # run anyway if module not loaded

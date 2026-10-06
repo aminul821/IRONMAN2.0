@@ -73,6 +73,11 @@ def error_callback(update: object, context: CallbackContext):
             caption=f"#{error.identifier}\n<b>An unknown error occured:</b>\n<code>{e[:900]}</code>",
             parse_mode="html",
         )
+    except Unauthorized:
+        LOGGER.warning(
+            "Could not send the error report: start the bot in private once "
+            "(or set EVENT_LOGS to a chat where the bot is admin)"
+        )
     except Exception:
         LOGGER.exception("Could not send the error report")
 
