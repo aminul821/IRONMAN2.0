@@ -106,7 +106,7 @@ SOLVERS = {
     "arcsin": lambda t: sympy.asin(_expr(t)),
     "arctan": lambda t: sympy.atan(_expr(t)),
     "abs": lambda t: sympy.Abs(_expr(t)),
-    "log": _log,
+    "logarithm": _log,
 }
 
 

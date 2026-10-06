@@ -130,6 +130,28 @@ Instead of environment variables you can copy `IronRobo/sample_config.py` to
 Apart from the chatbot (which needs `AI_API_KEY`), every feature works without
 extra API keys.
 
+## Log channel
+
+Like Rose, every group can send its moderation log to a channel:
+
+1. Add the bot to your channel as an admin (it needs to post messages).
+2. In the group, send `/setlog <channel id or @username>`. Or post `/setlog`
+   in the channel and forward that message to the group.
+
+`/logchannel` shows the current channel, `/unsetlog` stops logging.
+`/logcategories` lists what gets logged; turn categories on or off with
+`/log <category>` and `/nolog <category>` (or `all`):
+
+| Category | Logs |
+| --- | --- |
+| `settings` | Locks, anti-flood, welcome, warn limit, blocklist changes |
+| `admin` | Bans, mutes, kicks, warns, promotions, approvals, pins, purges |
+| `user` | Members joining and leaving |
+| `automated` | Actions the bot takes on its own: anti-flood, blocklist, warn filters |
+| `reports` | `/report` and `@admin` |
+
+If the bot is removed from the channel, logging is turned off and the group is told.
+
 ## Moving a group from Rose
 
 1. Send `/export` in the group while [@MissRose_bot](https://t.me/MissRose_bot) is there.

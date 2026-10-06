@@ -80,3 +80,50 @@ def __load_log_channels():
 
 
 __load_log_channels()
+
+
+class LogSettings(BASE):
+    """Log categories a chat turned off (comma separated)."""
+
+    __tablename__ = "log_settings"
+    chat_id = Column(String(20), primary_key=True)
+    disabled = Column(String(200), nullable=False, default="")
+
+    def __init__(self, chat_id, disabled=""):
+        self.chat_id = str(chat_id)
+        self.disabled = disabled
+
+
+ensure_table(LogSettings.__table__)
+
+DISABLED_CATEGORIES = {}
+
+
+def get_disabled_categories(chat_id):
+    return DISABLED_CATEGORIES.get(str(chat_id), set())
+
+
+def set_disabled_categories(chat_id, categories):
+    categories = set(categories)
+    with LOGS_INSERTION_LOCK:
+        try:
+            row = SESSION.query(LogSettings).get(str(chat_id))
+            if not row:
+                row = LogSettings(chat_id)
+                SESSION.add(row)
+            row.disabled = ",".join(sorted(categories))
+            SESSION.commit()
+        finally:
+            SESSION.close()
+        DISABLED_CATEGORIES[str(chat_id)] = categories
+
+
+def __load_log_settings():
+    try:
+        for row in SESSION.query(LogSettings).all():
+            DISABLED_CATEGORIES[row.chat_id] = {c for c in row.disabled.split(",") if c}
+    finally:
+        SESSION.close()
+
+
+__load_log_settings()

@@ -35,7 +35,7 @@ from IronRobo.modules.helper_funcs.string_handling import (
     escape_invalid_curly_brackets,
     markdown_parser,
 )
-from IronRobo.modules.log_channel import loggable
+from IronRobo.modules.log_channel import loggable, send_chat_log
 from IronRobo.modules.sql.global_bans_sql import is_user_gbanned
 from telegram import (
     ChatPermissions,
@@ -511,6 +511,17 @@ def left_member(update: Update, context: CallbackContext):
 
     if user.id == bot.id:
         return
+
+    gone = update.effective_message.left_chat_member
+    if gone and gone.id != bot.id:
+        log_text = (
+            f"<b>{html.escape(chat.title)}:</b>\n"
+            f"#USER_LEFT\n"
+            f"<b>User:</b> {mention_html(gone.id, html.escape(gone.first_name))} (<code>{gone.id}</code>)"
+        )
+        if user and user.id != gone.id:
+            log_text += f"\n<b>Removed by:</b> {mention_html(user.id, html.escape(user.first_name))}"
+        send_chat_log(bot, chat, log_text, "user", update.effective_message)
 
     if should_goodbye:
         reply = update.message.message_id

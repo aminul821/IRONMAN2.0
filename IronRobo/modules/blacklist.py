@@ -12,7 +12,7 @@ from IronRobo.modules.disable import DisableAbleCommandHandler
 from IronRobo.modules.helper_funcs.chat_status import user_admin, user_not_admin
 from IronRobo.modules.helper_funcs.extraction import extract_text
 from IronRobo.modules.helper_funcs.misc import split_message
-from IronRobo.modules.log_channel import loggable
+from IronRobo.modules.log_channel import loggable, send_chat_log
 from IronRobo.modules.warns import warn
 from IronRobo.modules.helper_funcs.string_handling import extract_time
 from IronRobo.modules.connection import connected
@@ -330,6 +330,17 @@ def findall(p, s):
         i = s.find(p, i + 1)
 
 
+BLACKLIST_MODE_NAMES = {
+    1: "deleted",
+    2: "deleted + warned",
+    3: "deleted + muted",
+    4: "deleted + kicked",
+    5: "deleted + banned",
+    6: "deleted + temp banned",
+    7: "deleted + temp muted",
+}
+
+
 @run_async
 @user_not_admin
 def del_blacklist(update, context):
@@ -348,6 +359,18 @@ def del_blacklist(update, context):
     for trigger in chat_filters:
         pattern = r"( |^|[^\w])" + re.escape(trigger) + r"( |$|[^\w])"
         if re.search(pattern, to_match, flags=re.IGNORECASE):
+            if getmode != 0:
+                send_chat_log(
+                    bot,
+                    chat,
+                    f"<b>{html.escape(chat.title)}:</b>\n"
+                    f"#BLACKLIST_HIT\n"
+                    f"<b>User:</b> {mention_html(user.id, html.escape(user.first_name))}\n"
+                    f"<b>Trigger:</b> <code>{html.escape(trigger)}</code>\n"
+                    f"<b>Action:</b> {BLACKLIST_MODE_NAMES.get(getmode, 'delete')}",
+                    "automated",
+                    message,
+                )
             try:
                 if getmode == 0:
                     return

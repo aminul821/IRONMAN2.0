@@ -122,7 +122,7 @@ Solves math problems
 ❍ /arcsin*:* Inverse Sine `/arcsin 0`
 ❍ /arctan*:* Inverse Tangent `/arctan 0`
 ❍ /abs*:* Absolute Value `/abs -1`
-❍ /log*:* Logarithm `/log 2l8`
+❍ /logarithm*:* Logarithm `/logarithm 2l8`
 
 _Keep in mind_: To find the tangent line of a function at a certain x value, send the request as c|f(x) where c is the given x value and f(x) is the function expression, the separator is a vertical bar '|'. See the table above for an example request.
 To find the area under a function, send the request as c:d|f(x) where c is the starting x value, d is the ending x value, and f(x) is the function under which you want the curve between the two x values.
